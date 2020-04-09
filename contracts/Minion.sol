@@ -4,6 +4,7 @@ import "./moloch/Moloch.sol";
 
 contract Minion {
 
+    // 0xb16903b2
     bytes4 public constant MINION_MAGIC_BYTES = bytes4(keccak256("minion_execute"));
 
     uint256 public nonce;
@@ -43,8 +44,7 @@ contract Minion {
         bool[6] memory flags = moloch.getProposalFlags(_proposalId);
 
         // {4 bytes MAGIC_BYTES}{32 byte nonce}{20 byte target address}{32 byte value}{data}
-        bytes32 callHash = keccak256(abi.encodePacked(
-            MINION_MAGIC_BYTES,
+        bytes32 callHash = keccak256(encodeCall(
             _nonce,
             _to,
             _value,
@@ -62,6 +62,23 @@ contract Minion {
         (bool success, bytes memory retData) = _to.call.value(_value)(_data);
         require(success, "Minion::call failure");
         return retData;
+    }
+
+    function encodeCall(
+        uint _nonce,
+        address _to,
+        uint _value,
+        bytes memory _data
+    )
+        public view returns (bytes memory)
+    {
+        return abi.encodePacked(
+            MINION_MAGIC_BYTES,
+            _nonce,
+            _to,
+            _value,
+            _data
+        );
     }
 
     function() external payable { }

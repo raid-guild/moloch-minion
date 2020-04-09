@@ -155,6 +155,7 @@ contract Moloch is ReentrancyGuard {
             approvedTokens.push(_approvedTokens[i]);
         }
 
+
         periodDuration = _periodDuration;
         votingPeriodLength = _votingPeriodLength;
         gracePeriodLength = _gracePeriodLength;
@@ -164,10 +165,13 @@ contract Moloch is ReentrancyGuard {
 
         summoningTime = now;
 
+
         members[_summoner] = Member(_summoner, 1, 0, true, 0, 0);
         memberAddressByDelegateKey[_summoner] = _summoner;
         totalShares = 1;
        
+        //td
+        // require(gasleft() < 10, "boo");
     }
 
     /*****************
