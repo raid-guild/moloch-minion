@@ -5,17 +5,15 @@ import "./moloch/Moloch.sol";
 contract Minion {
 
     // TODO:
-    // - should we use a nonce, or just put an executed bool in the Action struct?
-        // a nonce allows us to enforce order of execution
-        // no nonce is simpler for the frontend
     // - event signatures
 
-    string public constant MINION_ACTION_DETAILS = "{'title':'MINION','description':'ACTION'}";
+    string public constant MINION_ACTION_DETAILS = '{"title":"MINION","description":"ACTION"}';
 
     Moloch public moloch;
     address public molochApprovedToken;
 
-    mapping (uint256 => Action) public actions; // proposalId => Action
+    // proposalId => Action
+    mapping (uint256 => Action) public actions;
 
     struct Action {
         uint256 value;
@@ -32,7 +30,6 @@ contract Minion {
         molochApprovedToken = moloch.depositToken();
     }
 
-    // remove all but _action..
     function proposeAction(
         address _actionTo,
         uint256 _actionValue,
@@ -41,9 +38,8 @@ contract Minion {
         public
         returns (uint256)
     {
-        // No calls to the zero address allows us to check that
-        // we submitted the proposal without getting the proposal
-        // struct from the moloch
+        // No calls to zero address allows us to check that Minion submitted
+        // the proposal without getting the proposal struct from the moloch
         require(_actionTo != address(0), "Minion::invalid _actionTo");
 
         uint256 proposalId = moloch.submitProposal(

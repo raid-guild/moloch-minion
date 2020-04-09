@@ -18,22 +18,6 @@ import Utils from "./utils/utils";
 chai.use(solidity);
 const { expect } = chai;
 
-const molochConfig = {
-  PERIOD_DURATION_IN_SECONDS: 17280,
-  VOTING_DURATON_IN_PERIODS: 35,
-  GRACE_DURATON_IN_PERIODS: 35,
-  PROPOSAL_DEPOSIT: 10,
-  DILUTION_BOUND: 3,
-  PROCESSING_REWARD: 1,
-  TOKEN_SUPPLY: 10000
-};
-
-async function moveForwardPeriods(periods: number) {
-  const goToTime = molochConfig.PERIOD_DURATION_IN_SECONDS * periods;
-  await ethereum.send("evm_increaseTime", [goToTime]);
-  await ethereum.send("evm_mine", []);
-}
-
 describe("Minion integration", () => {
   const provider = waffle.provider;
   const [wallet] = provider.getWallets();
@@ -54,12 +38,12 @@ describe("Minion integration", () => {
       [
         wallet.address,
         [token.address],
-        molochConfig.PERIOD_DURATION_IN_SECONDS,
-        molochConfig.VOTING_DURATON_IN_PERIODS,
-        molochConfig.GRACE_DURATON_IN_PERIODS,
-        molochConfig.PROPOSAL_DEPOSIT,
-        molochConfig.DILUTION_BOUND,
-        molochConfig.PROCESSING_REWARD
+        Constants.molochConfig.PERIOD_DURATION_IN_SECONDS,
+        Constants.molochConfig.VOTING_DURATON_IN_PERIODS,
+        Constants.molochConfig.GRACE_DURATON_IN_PERIODS,
+        Constants.molochConfig.PROPOSAL_DEPOSIT,
+        Constants.molochConfig.DILUTION_BOUND,
+        Constants.molochConfig.PROCESSING_REWARD
       ],
       { gasLimit: 9500000 }
     )) as Moloch;
@@ -67,16 +51,20 @@ describe("Minion integration", () => {
     minion = (await deployContract(wallet, MinionArtifact, [
       moloch.address
     ])) as Minion;
+
     target = (await deployContract(wallet, TargetMockArtifact)) as TargetMock;
+    await token.approve(moloch.address, Constants.MaxUint256);
   });
 
   it("deploys correctly", async () => {
     expect(minion.address).to.not.eq(Constants.AddressZero);
     expect(await minion.moloch()).to.eq(moloch.address);
-    /* expect(await minion.MINION_MAGIC_BYTES()).to.eq(Constants.MINION_MAGIC_BYTES); */
+    expect(await minion.MINION_ACTION_DETAILS()).to.eq(
+      Constants.MINION_ACTION_DETAILS
+    );
   });
 
-  it("works with real moloch", async () => {
+  it("executes a passed proposal", async () => {
     const action = {
       to: target.address,
       value: 0,
@@ -84,20 +72,19 @@ describe("Minion integration", () => {
     };
 
     await minion.proposeAction(action.to, action.value, action.data);
-
-    await token.approve(moloch.address, Constants.MaxUint256);
-    await moloch.sponsorProposal(0);
-    await moveForwardPeriods(1);
-    await moloch.submitVote(0, 1);
-    await moveForwardPeriods(molochConfig.VOTING_DURATON_IN_PERIODS);
-    await moveForwardPeriods(molochConfig.GRACE_DURATON_IN_PERIODS);
-    await moloch.processProposal(0);
-    /* await moloch.proposals(1); */
-    console.log("flags", await moloch.getProposalFlags(0));
-
+    await Utils.passProposal(moloch, 0);
     await minion.executeAction(0);
+  });
 
-    // TODO: submitting raw bytes to details will break most javascript implemtations
-    // attempts to retrieve the proposal struct
+  it("fails to execute an un-passed proposal", async () => {
+    const action = {
+      to: target.address,
+      value: 0,
+      data: ethers.constants.HashZero
+    };
+    await minion.proposeAction(action.to, action.value, action.data);
+    await expect(minion.executeAction(0)).to.be.revertedWith(
+      Constants.revertStrings.NOT_PASSED
+    );
   });
 });
