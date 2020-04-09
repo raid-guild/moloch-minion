@@ -8,13 +8,14 @@ contract Minion {
     // - should we use a nonce, or just put an executed bool in the Action struct?
         // a nonce allows us to enforce order of execution
         // no nonce is simpler for the frontend
-    // - need to play with the details string to get something that wont break when converted to utf8
+    // - event signatures
 
-    bytes4 public constant MINION_MAGIC_HASH = bytes4(keccak256("minion_action"));
+    string public constant MINION_ACTION_DETAILS = "{'title':'MINION','description':'ACTION'}";
 
     Moloch public moloch;
+    address public molochApprovedToken;
 
-    mapping (uint256 => Action) actions; // proposalId => Action
+    mapping (uint256 => Action) public actions; // proposalId => Action
 
     struct Action {
         uint256 value;
@@ -28,15 +29,11 @@ contract Minion {
 
     constructor(address _moloch) public {
         moloch = Moloch(_moloch);
+        molochApprovedToken = moloch.depositToken();
     }
 
+    // remove all but _action..
     function proposeAction(
-        uint256 _sharesRequested,
-        uint256 _lootRequested,
-        uint256 _tributeOffered,
-        address _tributeToken,
-        uint256 _paymentRequested,
-        address _paymentToken,
         address _actionTo,
         uint256 _actionValue,
         bytes memory _actionData
@@ -49,20 +46,15 @@ contract Minion {
         // struct from the moloch
         require(_actionTo != address(0), "Minion::invalid _actionTo");
 
-        string memory details = string(abi.encodePacked(
-            MINION_MAGIC_HASH,
-            keccak256(abi.encodePacked(_actionTo, _actionValue, _actionData))
-        ));
-
         uint256 proposalId = moloch.submitProposal(
             address(this),
-            _sharesRequested,
-            _lootRequested,
-            _tributeOffered,
-            _tributeToken,
-            _paymentRequested,
-            _paymentToken,
-            details
+            0,
+            0,
+            0,
+            molochApprovedToken,
+            0,
+            molochApprovedToken,
+            MINION_ACTION_DETAILS
         );
 
         Action memory action = Action({
@@ -82,9 +74,9 @@ contract Minion {
         Action memory action = actions[_proposalId];
         bool[6] memory flags = moloch.getProposalFlags(_proposalId);
 
-        // require(_to != address(moloch), "Minion::invalid action target");
+        require(action.to != address(moloch), "Minion::invalid target");
         require(action.to != address(0), "Minion::invalid _proposalId");
-        require(!action.executed, "Minion::action exectuted");
+        require(!action.executed, "Minion::action executed");
         require(address(this).balance >= action.value, "Minion::insufficient eth");
         require(flags[2], "Minion::proposal not passed");
 

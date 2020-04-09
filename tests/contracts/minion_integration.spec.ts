@@ -77,41 +77,13 @@ describe("Minion integration", () => {
   });
 
   it("works with real moloch", async () => {
-    /* const minionCall = { */
-    /*   nonce: 0, */
-    /*   to: target.address, */
-    /*   value: 0, */
-    /*   data: ethers.constants.HashZero */
-    /* }; */
-    /* const encodedMinionCall = Utils.encodeMinionCall(minionCall); */
-
-    /* const submitProposalFuncSig = moloch.interface.functions.submitProposal.sighash; */
-    /* const submitProposalFuncData = ethers.utils.defaultAbiCoder.encode( */
-    /*   [ 'address', 'uint256', 'uint256', 'uint256', 'address', 'uint256', 'address', 'bytes' ], */
-    /*   [ minion.address, 0, 0, 0, token.address, 0, token.address, encodedMinionCall ] */
-    /* ).slice(2); */
-    /* const submitProposalTxData = submitProposalFuncSig + submitProposalFuncData; */
-    /* const submitProposalTx = { */
-    /*   to: moloch.address, */
-    /*   data: submitProposalTxData */
-    /* }; */
-    /* const proposalReceipt = await wallet.sendTransaction(submitProposalTx); */
     const action = {
       to: target.address,
       value: 0,
       data: ethers.constants.HashZero
     };
-    await minion.proposeAction(
-      0,
-      0,
-      0,
-      token.address,
-      0,
-      token.address,
-      action.to,
-      action.value,
-      action.data
-    );
+
+    await minion.proposeAction(action.to, action.value, action.data);
 
     await token.approve(moloch.address, Constants.MaxUint256);
     await moloch.sponsorProposal(0);
