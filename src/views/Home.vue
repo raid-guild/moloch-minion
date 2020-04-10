@@ -13,8 +13,8 @@
     <v-row
       align="center"
       justify="center"
-      :key="minion"
-      v-for="minion in minions"
+      v-for="(minion, idx) in minions"
+      :key="idx"
     >
       <MinionItem :minion="minion" />
     </v-row>
@@ -24,32 +24,28 @@
         <template>
           <v-form ref="form" v-model="valid" lazy-validation>
             <v-text-field
-              v-model="name"
-              :counter="10"
-              :rules="nameRules"
+              v-model="target"
               label="Target Address"
               required
             ></v-text-field>
 
             <v-text-field
-              v-model="name"
-              :counter="10"
-              :rules="nameRules"
-              label="Detail"
-              required
-            ></v-text-field>
-            <v-text-field
-              v-model="name"
-              :counter="10"
-              :rules="nameRules"
-              label="Hex Code"
+              v-model="description"
+              label="Short Description"
               required
             ></v-text-field>
 
+            <v-textarea
+              name="input-7-1"
+              filled
+              label="Data (Hex Encoded)"
+              auto-grow
+              value="The Woodman set to work at once, and so sharp was his axe that the tree was soon chopped nearly through."
+            ></v-textarea>
+
             <v-checkbox
               v-model="checkbox"
-              :rules="[v => !!v || 'You must agree to continue!']"
-              label="Do you agree?"
+              label="I'm ok with this"
               required
             ></v-checkbox>
 
@@ -72,7 +68,14 @@ export default {
   },
   components: { MinionItem },
   data: () => ({
-    minions: [{ name: "minion 1" }, { name: "minion 2" }]
+    minions: [
+      { id: 1, name: "minion 1" },
+      { id: 2, name: "minion 2" }
+    ],
+    valid: true,
+    target: "",
+    description: "",
+    checkbox: false
   }),
   methods: {
     addMinion() {
