@@ -1,48 +1,54 @@
 <template>
-  <v-app>
-    <v-app-bar app color="primary" dark>
-      <div
-        class="d-flex align-center"
-        style="cursor: pointer;"
-        @click="$router.push('/')"
-      >
-        <v-img
-          alt="Vuetify Logo"
-          class="shrink mr-2"
-          contain
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"
-          transition="scale-transition"
-          width="40"
-        />
+  <v-app id="inspire">
+    <v-navigation-drawer v-model="drawer" app clipped>
+      <v-list dense>
+        <v-list-item link>
+          <v-list-item-action>
+            <v-icon>mdi-view-dashboard</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title @click="$router.push('/')"
+              >Current Proposals</v-list-item-title
+            >
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item link>
+          <v-list-item-action>
+            <v-icon>mdi-settings</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title @click="$router.push('about')"
+              >About</v-list-item-title
+            >
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
 
-        <v-img
-          alt="Vuetify Name"
-          class="shrink mt-1 hidden-sm-and-down"
-          contain
-          min-width="100"
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-name-dark.png"
-          width="100"
-        />
-      </div>
-
-      <v-spacer></v-spacer>
-
-      <v-btn to="counter" text>
-        <span class="mr-2">Counter</span>
-        <v-icon>fas fa-calculator</v-icon>
-      </v-btn>
+    <v-app-bar app clipped-left>
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
+      <v-toolbar-title>Minion</v-toolbar-title>
     </v-app-bar>
 
     <v-content>
-      <router-view></router-view>
+      <router-view> </router-view>
     </v-content>
+
+    <v-footer app>
+      <span>&copy; 2019</span>
+    </v-footer>
   </v-app>
 </template>
-
-<script lang="ts">
-import Vue from "vue";
-
-export default Vue.extend({
-  name: "App"
-});
+<script>
+export default {
+  props: {
+    source: String
+  },
+  data: () => ({
+    drawer: null
+  }),
+  created() {
+    this.$vuetify.theme.dark = true;
+  }
+};
 </script>
