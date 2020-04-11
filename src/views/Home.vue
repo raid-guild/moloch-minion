@@ -26,21 +26,26 @@
             <v-text-field
               v-model="target"
               label="Target Address"
+              :rules="targetRules"
               required
             ></v-text-field>
 
             <v-text-field
               v-model="description"
               label="Short Description"
+              :rules="descriptionRules"
               required
             ></v-text-field>
 
             <v-textarea
               name="input-7-1"
+              v-model="hexData"
               filled
               label="Data (Hex Encoded)"
+              :rules="hexDataRules"
               auto-grow
-              value="The Woodman set to work at once, and so sharp was his axe that the tree was soon chopped nearly through."
+              required
+              value=""
             ></v-textarea>
 
             <v-checkbox
@@ -49,7 +54,7 @@
               required
             ></v-checkbox>
 
-            <v-btn color="success" class="mr-4" @click="addMinion">
+            <v-btn color="success" class="mr-4" @click="submit">
               Submit
             </v-btn>
           </v-form>
@@ -69,18 +74,37 @@ export default {
   components: { MinionItem },
   data: () => ({
     minions: [
-      { id: 1, name: "minion 1" },
-      { id: 2, name: "minion 2" }
+      { id: 1, name: "minion 1", desc: "" },
+      { id: 2, name: "minion 2", desc: "" }
     ],
-    valid: true,
+    valid: false,
     target: "",
+    targetRules: [
+      v => !!v || "Target is required",
+      v =>
+        (v && /^(0x){1}[0-9a-fA-F]{40}$/i.test(v)) || "Must be a valid address" // can use web3 checksum
+    ],
     description: "",
+    descriptionRules: [
+      v => !!v || "Description is required",
+      v => (v && v.length <= 200) || "Too Long"
+    ],
+    hexData: "",
+    hexDataRules: [
+      v => !!v || "Hex Data is required",
+      v => (v && v.startsWith("0x")) || "Must start with 0x"
+    ],
     checkbox: false
   }),
   methods: {
-    addMinion() {
+    submit() {
+      if (!this.valid) {
+        return false;
+      }
+      //TODO: make web3 call
       const minion = {};
       minion.name = "new minion";
+      minion.description = this.description;
       this.minions.push(minion);
     }
   }
