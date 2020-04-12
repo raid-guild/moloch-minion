@@ -75,8 +75,20 @@ export default {
     user: null,
     web3: null,
     minions: [
-      { id: 1, name: "minion 1", desc: "", executed: false },
-      { id: 2, name: "minion 2", desc: "", executed: false }
+      {
+        id: 1,
+        proposalId: 1,
+        name: "minion 1",
+        description: "",
+        executed: false
+      },
+      {
+        id: 2,
+        proposalId: 2,
+        name: "minion 2",
+        description: "",
+        executed: false
+      }
     ],
     overlay: false
   }),
@@ -112,12 +124,36 @@ export default {
         this.overlay = false;
         this.$router.push("/");
       }, 3000);
-      //TODO: make web3 call
+      //TODO: make web3 call, should be able to get proposalId from returnValues in txReceipt
+      // const nftContract = new this.web3.eth.Contract(abi, contractAddr);
+      // try {
+      //   const txReceipt = await contract.methods
+      //   proposeAction(
+      //     minion.target,
+      //     0,
+      //     minion.hexData,
+      //     minion. description
+      // )
+      //   .send({ from: this.user });
+      //   minion.proposalId =
+      // catch {
+      //   console.log("rejected");
+      // }
       this.minions.push(minion);
     },
     onExecutedChild(id) {
       this.overlay = true;
       //TODO: make web3 call
+      // const nftContract = new this.web3.eth.Contract(abi, contractAddr);
+      // try {
+      //   const txReceipt = await contract.methods
+      //   execute(
+      //     minion.proposalId,
+      // )
+      //   .send({ from: this.user });
+      // catch {
+      //   console.log("rejected");
+      // }
       setTimeout(() => {
         this.overlay = false;
         this.minions.find(minion => minion.id === id).executed = true;

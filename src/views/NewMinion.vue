@@ -86,7 +86,9 @@ export default {
       const minion = {};
       minion.name = "new minion";
       minion.description = this.description;
+      // TODO: might want to use proposalId for this
       minion.id = this.minions.length + 1;
+      minion.hexData = this.hexData;
       minion.executed = false;
       this.$emit("submitted", minion);
     }
