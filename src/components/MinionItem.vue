@@ -8,9 +8,13 @@
               <v-card-title class="headline">{{ minion.name }}</v-card-title>
 
               <v-card-subtitle>{{ minion.description }}</v-card-subtitle>
-
+              <v-card-text>
+                <span v-if="minion.executed">executed</span>
+              </v-card-text>
               <v-card-actions>
-                <v-btn text>Execute</v-btn>
+                <v-btn v-if="!minion.executed" text @click="executeItem"
+                  >Execute</v-btn
+                >
               </v-card-actions>
             </v-card>
           </v-col>
@@ -23,7 +27,13 @@
 <script>
 export default {
   props: {
-    minion: Object
+    minion: Object,
+    execute: Function
+  },
+  methods: {
+    executeItem() {
+      this.execute(this.minion.id);
+    }
   }
 };
 </script>

@@ -44,12 +44,20 @@
     </v-app-bar>
 
     <v-content>
-      <router-view> </router-view>
+      <router-view
+        @submitted="onSubmittedChild"
+        @executed="onExecutedChild"
+        :minions="minions"
+      >
+      </router-view>
     </v-content>
 
     <v-footer app>
       <span>&copy; 2019</span>
     </v-footer>
+    <v-overlay :value="overlay">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
   </v-app>
 </template>
 <script>
@@ -65,7 +73,12 @@ export default {
   data: () => ({
     drawer: null,
     user: null,
-    web3: null
+    web3: null,
+    minions: [
+      { id: 1, name: "minion 1", desc: "", executed: false },
+      { id: 2, name: "minion 2", desc: "", executed: false }
+    ],
+    overlay: false
   }),
   components: { Web3Signin },
   methods: {
@@ -92,6 +105,23 @@ export default {
       } catch (err) {
         console.log("web3Modal error", err);
       }
+    },
+    onSubmittedChild(minion) {
+      this.overlay = true;
+      setTimeout(() => {
+        this.overlay = false;
+        this.$router.push("/");
+      }, 3000);
+      //TODO: make web3 call
+      this.minions.push(minion);
+    },
+    onExecutedChild(id) {
+      this.overlay = true;
+      //TODO: make web3 call
+      setTimeout(() => {
+        this.overlay = false;
+        this.minions.find(minion => minion.id === id).executed = true;
+      }, 3000);
     }
   },
   created() {
