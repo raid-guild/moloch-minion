@@ -61,6 +61,9 @@
         </template>
       </v-col>
     </v-row>
+    <v-overlay :value="overlay">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
   </v-container>
 </template>
 
@@ -77,6 +80,7 @@ export default {
       { id: 1, name: "minion 1", desc: "" },
       { id: 2, name: "minion 2", desc: "" }
     ],
+    overlay: false,
     valid: false,
     target: "",
     targetRules: [
@@ -101,6 +105,10 @@ export default {
       if (!this.valid) {
         return false;
       }
+      this.overlay = true;
+      setTimeout(() => {
+        this.overlay = false;
+      }, 3000);
       //TODO: make web3 call
       const minion = {};
       minion.name = "new minion";
