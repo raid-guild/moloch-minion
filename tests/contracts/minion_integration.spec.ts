@@ -68,10 +68,18 @@ describe("Minion integration", () => {
     const action = {
       to: target.address,
       value: 0,
-      data: ethers.constants.HashZero
+      data: ethers.constants.HashZero,
+      description: "foo"
     };
 
-    await minion.proposeAction(action.to, action.value, action.data);
+    await minion.proposeAction(
+      action.to,
+      action.value,
+      action.data,
+      action.description
+    );
+    console.log("passed as description paramer:", action.description);
+    console.log("action details:", (await moloch.proposals(0)).details);
     await Utils.passProposal(moloch, 0);
     await minion.executeAction(0);
   });
@@ -80,9 +88,15 @@ describe("Minion integration", () => {
     const action = {
       to: target.address,
       value: 0,
-      data: ethers.constants.HashZero
+      data: ethers.constants.HashZero,
+      description: "foo"
     };
-    await minion.proposeAction(action.to, action.value, action.data);
+    await minion.proposeAction(
+      action.to,
+      action.value,
+      action.data,
+      action.description
+    );
     await expect(minion.executeAction(0)).to.be.revertedWith(
       Constants.revertStrings.NOT_PASSED
     );
