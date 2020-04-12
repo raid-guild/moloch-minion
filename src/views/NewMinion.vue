@@ -10,15 +10,12 @@
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
-      <v-col cols="5">
-        <h1>About</h1>
-        <p>
-          There was no way built into Moloch V2 to run arbitrary functions from
-          different contracts through a passing proposal. This now works through
-          a 'Minion' contract, through a funding proposal in V2 with 0 shares
-          and 0 payment:
-        </p>
-      </v-col>
+      <h1>New Miniont</h1>
+    </v-row>
+    <v-row align="center" justify="center">
+      <p>
+        Move Form here
+      </p>
     </v-row>
   </v-container>
 </template>
