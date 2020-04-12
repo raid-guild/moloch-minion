@@ -28,6 +28,9 @@
     <v-app-bar app clipped-left>
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <v-toolbar-title>Minion</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn v-if="user" small color="primary" dark>{{ user }}</v-btn>
+      <Web3Signin v-if="!user" :signIn="signIn" />
     </v-app-bar>
 
     <v-content>
@@ -40,15 +43,64 @@
   </v-app>
 </template>
 <script>
+import Web3Signin from "./components/Web3Signin";
+import Web3 from "web3";
+import Web3Modal from "web3modal";
+import WalletConnectProvider from "@walletconnect/web3-provider";
+
 export default {
   props: {
     source: String
   },
   data: () => ({
-    drawer: null
+    drawer: null,
+    user: null,
+    web3: null
   }),
+  components: { Web3Signin },
+  methods: {
+    async signIn() {
+      try {
+        const providerOptions = {
+          walletconnect: {
+            package: WalletConnectProvider, // required
+            options: {
+              infuraId: "895440c3ef614d1e835c6b2f114067e8"
+            }
+          }
+        };
+        const web3Modal = new Web3Modal({
+          providerOptions, // required
+          cacheProvider: true
+        });
+
+        const provider = await web3Modal.connect();
+
+        this.web3 = new Web3(provider);
+        const [account] = await this.web3.eth.getAccounts();
+        this.user = account;
+      } catch (err) {
+        console.log("web3Modal error", err);
+      }
+    }
+  },
   created() {
     this.$vuetify.theme.dark = true;
+    const providerOptions = {
+      walletconnect: {
+        package: WalletConnectProvider, // required
+        options: {
+          infuraId: "895440c3ef614d1e835c6b2f114067e8"
+        }
+      }
+    };
+    const web3Modal = new Web3Modal({
+      providerOptions, // required
+      cacheProvider: true
+    });
+    if (web3Modal.cachedProvider) {
+      this.signIn();
+    }
   }
 };
 </script>
