@@ -18,12 +18,13 @@ contract Minion {
     struct Action {
         uint256 value;
         address to;
+        address proposer;
         bool executed;
         bytes data;
     }
 
-    event ActionProposed(uint256 _proposalId);
-    event ActionExecuted(uint256 _proposalId);
+    event ActionProposed(uint256 proposalId, address proposer);
+    event ActionExecuted(uint256 proposalId);
 
     constructor(address _moloch) public {
         moloch = Moloch(_moloch);
@@ -59,13 +60,14 @@ contract Minion {
         Action memory action = Action({
             value: _actionValue,
             to: _actionTo,
+            proposer: msg.sender,
             executed: false,
             data: _actionData
         });
 
         actions[proposalId] = action;
 
-        emit ActionProposed(proposalId);
+        emit ActionProposed(proposalId, msg.sender);
         return proposalId;
     }
 

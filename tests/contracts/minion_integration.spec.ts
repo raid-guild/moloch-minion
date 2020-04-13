@@ -64,41 +64,77 @@ describe("Minion integration", () => {
     );
   });
 
-  it("executes a passed proposal", async () => {
-    const action = {
-      to: target.address,
-      value: 0,
-      data: ethers.constants.HashZero,
-      description: "foo"
-    };
+  describe("success cases", () => {
+    it("executes a passed proposal", async () => {
+      const action = {
+        to: target.address,
+        value: 0,
+        data: ethers.constants.HashZero,
+        description: "foo"
+      };
 
-    await minion.proposeAction(
-      action.to,
-      action.value,
-      action.data,
-      action.description
-    );
-    console.log("passed as description paramer:", action.description);
-    console.log("action details:", (await moloch.proposals(0)).details);
-    await Utils.passProposal(moloch, 0);
-    await minion.executeAction(0);
+      await minion.proposeAction(
+        action.to,
+        action.value,
+        action.data,
+        action.description
+      );
+      console.log("passed as description paramer:", action.description);
+      console.log("action details:", (await moloch.proposals(0)).details);
+      await Utils.passProposal(moloch, 0);
+      await minion.executeAction(0);
+    });
   });
 
-  it("fails to execute an un-passed proposal", async () => {
-    const action = {
-      to: target.address,
-      value: 0,
-      data: ethers.constants.HashZero,
-      description: "foo"
-    };
-    await minion.proposeAction(
-      action.to,
-      action.value,
-      action.data,
-      action.description
-    );
-    await expect(minion.executeAction(0)).to.be.revertedWith(
-      Constants.revertStrings.NOT_PASSED
-    );
+  describe("failue cases", () => {
+    /* beforeEach(async () => {}); */
+
+    it("fails to propose an invalid action", async () => {
+      const badAction = {
+        to: Constants.AddressZero,
+        value: ethers.utils.parseEther("1"),
+        data: ethers.constants.HashZero,
+        description: "foo"
+      };
+      await expect(
+        minion.proposeAction(
+          badAction.to,
+          badAction.value,
+          badAction.data,
+          badAction.description
+        )
+      ).to.be.revertedWith(Constants.revertStrings.INVALID_PROP_TARGET);
+    });
+
+    it("fails to execute an invalid action", async () => {
+      const action = {
+        to: target.address,
+        value: ethers.utils.parseEther("1"),
+        data: ethers.constants.HashZero,
+        description: "foo"
+      };
+      await minion.proposeAction(
+        action.to,
+        action.value,
+        action.data,
+        action.description
+      );
+
+      /* // moloch as action target */
+      /* await expect(minion.executeAction(0)).to.be.revertedWith( */
+      /*   Constants.revertStrings.INVALID_EXEC_TARGET */
+      /* ); */
+
+      // insufficient eth
+      await expect(minion.executeAction(0)).to.be.revertedWith(
+        Constants.revertStrings.NO_ETH
+      );
+
+      // proposal not passed
+      await wallet.sendTransaction({ to: minion.address, value: action.value });
+      await expect(minion.executeAction(0)).to.be.revertedWith(
+        Constants.revertStrings.NOT_PASSED
+      );
+    });
   });
 });
