@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 
-const MINION_ACTION_DETAILS = '{"title":"MINION","description":"ACTION"}';
+const MINION_ACTION_DETAILS =
+  '{"isMinion": true, "title":"MINION", "description":"';
 
 const molochConfig = {
   PERIOD_DURATION_IN_SECONDS: 17280,

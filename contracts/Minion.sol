@@ -7,7 +7,7 @@ contract Minion {
     // TODO:
     // - event signatures
 
-    string public constant MINION_ACTION_DETAILS = '{"title":"MINION","description":"ACTION"}';
+    string public constant MINION_ACTION_DETAILS = '{"isMinion": true, "title":"MINION", "description":"';
 
     Moloch public moloch;
     address public molochApprovedToken;
@@ -18,12 +18,13 @@ contract Minion {
     struct Action {
         uint256 value;
         address to;
+        address proposer;
         bool executed;
         bytes data;
     }
 
-    event ActionProposed(uint256 _proposalId);
-    event ActionExecuted(uint256 _proposalId);
+    event ActionProposed(uint256 proposalId, address proposer);
+    event ActionExecuted(uint256 proposalId);
 
     constructor(address _moloch) public {
         moloch = Moloch(_moloch);
@@ -33,7 +34,8 @@ contract Minion {
     function proposeAction(
         address _actionTo,
         uint256 _actionValue,
-        bytes memory _actionData
+        bytes memory _actionData,
+        string memory _description
     )
         public
         returns (uint256)
@@ -41,6 +43,8 @@ contract Minion {
         // No calls to zero address allows us to check that Minion submitted
         // the proposal without getting the proposal struct from the moloch
         require(_actionTo != address(0), "Minion::invalid _actionTo");
+
+        string memory details = string(abi.encodePacked(MINION_ACTION_DETAILS, _description, '"}'));
 
         uint256 proposalId = moloch.submitProposal(
             address(this),
@@ -50,19 +54,20 @@ contract Minion {
             molochApprovedToken,
             0,
             molochApprovedToken,
-            MINION_ACTION_DETAILS
+            details
         );
 
         Action memory action = Action({
             value: _actionValue,
             to: _actionTo,
+            proposer: msg.sender,
             executed: false,
             data: _actionData
         });
 
         actions[proposalId] = action;
 
-        emit ActionProposed(proposalId);
+        emit ActionProposed(proposalId, msg.sender);
         return proposalId;
     }
 
