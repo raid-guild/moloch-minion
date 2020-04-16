@@ -47,7 +47,7 @@
       <router-view
         @submitted="onSubmittedChild"
         @executed="onExecutedChild"
-        :minions="proposals"
+        :minions="minions"
       >
       </router-view>
     </v-content>
@@ -93,6 +93,30 @@ export default {
     proposals: [],
     overlay: false
   }),
+  computed: {
+    minions: function() {
+      const data = this.proposals
+        .filter(item => {
+          const isMinion = true; // TODO: set false and reasign after testing
+          // try {
+          //   isMinion = JSON.parse(item.details).isMinion;
+          // } catch (e) {
+          //   ("pass");
+          // }
+          return item.didPass && isMinion;
+        }) // TODO: check if is minion
+        .map(item => {
+          try {
+            item.description = JSON.parse(item.details).description;
+          } catch (e) {
+            item.description = "description";
+          }
+          // TODO: get is item.executed from minion contract public actions struct or ActionExecuted event
+          return item;
+        });
+      return data;
+    }
+  },
   components: { Web3Signin },
   methods: {
     async signIn() {
@@ -101,7 +125,7 @@ export default {
           walletconnect: {
             package: WalletConnectProvider, // required
             options: {
-              infuraId: "895440c3ef614d1e835c6b2f114067e8"
+              infuraId: "895440c3ef614d1e835c6b2f114067e8" // TODO: move to env
             }
           }
         };
@@ -178,7 +202,6 @@ export default {
     if (web3Modal.cachedProvider) {
       this.signIn();
     }
-    console.log("props", this.proposals);
   }
 };
 </script>

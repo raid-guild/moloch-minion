@@ -9,9 +9,7 @@
                 >Minion: {{ minion.proposalId }}</v-card-title
               >
 
-              <v-card-subtitle>{{
-                (minion.details && JSON.parse(minion.details).description) || ""
-              }}</v-card-subtitle>
+              <v-card-subtitle>{{ minion.description }}</v-card-subtitle>
               <v-card-text>
                 <span v-if="minion.executed">executed</span>
               </v-card-text>
