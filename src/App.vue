@@ -47,7 +47,7 @@
       <router-view
         @submitted="onSubmittedChild"
         @executed="onExecutedChild"
-        :minions="minions"
+        :minions="proposals"
       >
       </router-view>
     </v-content>
@@ -65,31 +65,32 @@ import Web3Signin from "./components/Web3Signin";
 import Web3 from "web3";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
+import gql from "graphql-tag";
 
 export default {
   props: {
     source: String
   },
+  apollo: {
+    proposals: gql`
+      query {
+        proposals(
+          where: { molochAddress: "0x501f352e32ec0c981268dc5b5ba1d3661b1acbc6" }
+        ) {
+          molochAddress
+          proposalIndex
+          proposalId
+          didPass
+          details
+        }
+      }
+    `
+  },
   data: () => ({
     drawer: null,
     user: null,
     web3: null,
-    minions: [
-      {
-        id: 1,
-        proposalId: 1,
-        name: "minion 1",
-        description: "",
-        executed: false
-      },
-      {
-        id: 2,
-        proposalId: 2,
-        name: "minion 2",
-        description: "",
-        executed: false
-      }
-    ],
+    proposals: [],
     overlay: false
   }),
   components: { Web3Signin },
@@ -139,7 +140,7 @@ export default {
       // catch {
       //   console.log("rejected");
       // }
-      this.minions.push(minion);
+      this.proposals.push(minion);
     },
     onExecutedChild(id) {
       this.overlay = true;
@@ -156,7 +157,7 @@ export default {
       // }
       setTimeout(() => {
         this.overlay = false;
-        this.minions.find(minion => minion.id === id).executed = true;
+        this.proposals.find(minion => minion.id === id).executed = true;
       }, 3000);
     }
   },
@@ -177,6 +178,7 @@ export default {
     if (web3Modal.cachedProvider) {
       this.signIn();
     }
+    console.log("props", this.proposals);
   }
 };
 </script>
