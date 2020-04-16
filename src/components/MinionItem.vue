@@ -5,9 +5,13 @@
         <v-row dense>
           <v-col cols="12">
             <v-card color="#385F73" dark>
-              <v-card-title class="headline">{{ minion.name }}</v-card-title>
+              <v-card-title class="headline"
+                >Minion: {{ minion.proposalId }}</v-card-title
+              >
 
-              <v-card-subtitle>{{ minion.description }}</v-card-subtitle>
+              <v-card-subtitle>{{
+                (minion.details && JSON.parse(minion.details).description) || ""
+              }}</v-card-subtitle>
               <v-card-text>
                 <span v-if="minion.executed">executed</span>
               </v-card-text>
