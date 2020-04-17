@@ -16,7 +16,7 @@
       v-for="(minion, idx) in minions"
       :key="idx"
     >
-      <MinionItem :minion="minion" :execute="execute" />
+      <MinionItem :minion="minion" :events="events" :execute="execute" />
     </v-row>
   </v-container>
 </template>
@@ -27,7 +27,8 @@ import MinionItem from "../components/MinionItem";
 export default {
   props: {
     source: String,
-    minions: Array
+    minions: Array,
+    events: Array
   },
   components: { MinionItem },
   methods: {

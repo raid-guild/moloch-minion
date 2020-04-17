@@ -11,11 +11,11 @@
 
               <v-card-subtitle>{{ minion.description }}</v-card-subtitle>
               <v-card-text>
-                <span v-if="minion.executed">executed</span>
+                <span v-if="isExecuted()">executed</span>
               </v-card-text>
               <v-card-actions>
                 <v-btn
-                  v-if="!minion.executed && minion.didPass"
+                  v-if="!isExecuted() && minion.didPass"
                   text
                   @click="executeItem"
                   >Execute</v-btn
@@ -33,11 +33,17 @@
 export default {
   props: {
     minion: Object,
+    events: Array,
     execute: Function
   },
   methods: {
     executeItem() {
       this.execute(this.minion.proposalId);
+    },
+    isExecuted() {
+      return this.events.some(
+        item => item.returnValues.proposalId === this.minion.proposalId
+      );
     }
   }
 };

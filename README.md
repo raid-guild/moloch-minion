@@ -18,3 +18,13 @@ yarn build:contracts
 ```
 yarn test:contracts
 ```
+
+#### Run web
+```
+yarn start:web
+```
+
+#### build web
+```
+yarn build:web
+```
