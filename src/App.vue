@@ -66,6 +66,7 @@ import Web3 from "web3";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import gql from "graphql-tag";
+import abi from "./abi/minion.json";
 
 export default {
   props: {
@@ -91,19 +92,20 @@ export default {
     user: null,
     web3: null,
     proposals: [],
-    overlay: false
+    overlay: false,
+    contractAddr: process.env.VUE_APP_CONTRACT_ADDR
   }),
   computed: {
     minions: function() {
       const data = this.proposals
         .filter(item => {
-          const isMinion = true; // TODO: set false and reasign after testing
-          // try {
-          //   isMinion = JSON.parse(item.details).isMinion;
-          // } catch (e) {
-          //   ("pass");
-          // }
-          return item.didPass && isMinion;
+          let isMinion = false; // TODO: set false and reasign after testing
+          try {
+            isMinion = JSON.parse(item.details).isMinion;
+          } catch (e) {
+            ("pass");
+          }
+          return isMinion;
         }) // TODO: check if is minion
         .map(item => {
           try {
@@ -115,6 +117,21 @@ export default {
           return item;
         });
       return data;
+    },
+    events: function() {
+      // TODO: resolve into minion for executed property
+      // const contract = new this.web3.eth.Contract(abi, this.contractAddr);
+      // return await contract.getPastEvents(
+      //   "ActionExecuted",
+      //   {
+      //     fromBlock: 0,
+      //     toBlock: "latest",
+      //   },
+      //   (err, ev) => {
+      //     return ev;
+      //   }
+      // );
+      return [];
     }
   },
   components: { Web3Signin },
@@ -125,7 +142,7 @@ export default {
           walletconnect: {
             package: WalletConnectProvider, // required
             options: {
-              infuraId: "895440c3ef614d1e835c6b2f114067e8" // TODO: move to env
+              infuraId: process.env.VUE_APP_INFURA
             }
           }
         };
@@ -137,52 +154,54 @@ export default {
         const provider = await web3Modal.connect();
 
         this.web3 = new Web3(provider);
+        // TODO: check valid chain id
         const [account] = await this.web3.eth.getAccounts();
         this.user = account;
       } catch (err) {
         console.log("web3Modal error", err);
       }
     },
-    onSubmittedChild(minion) {
+    async onSubmittedChild(minion) {
       this.overlay = true;
-      setTimeout(() => {
+      const contract = new this.web3.eth.Contract(abi, this.contractAddr);
+      try {
+        const txReceipt = await contract.methods
+          .proposeAction(minion.target, 0, minion.hexData, minion.description)
+          .send({ from: this.user });
+        console.log("txReceipt", txReceipt); // TODO: provide link to etherscan while loading
+        // minion.proposalId =
+        // timeout to let things sync?
+        setTimeout(() => {
+          this.overlay = false;
+          this.$router.push("/");
+        }, 1000);
+      } catch (e) {
         this.overlay = false;
-        this.$router.push("/");
-      }, 3000);
-      //TODO: make web3 call, should be able to get proposalId from returnValues in txReceipt
-      // const nftContract = new this.web3.eth.Contract(abi, contractAddr);
-      // try {
-      //   const txReceipt = await contract.methods
-      //   proposeAction(
-      //     minion.target,
-      //     0,
-      //     minion.hexData,
-      //     minion. description
-      // )
-      //   .send({ from: this.user });
-      //   minion.proposalId =
-      // catch {
-      //   console.log("rejected");
-      // }
-      this.proposals.push(minion);
+        console.log("rejected", e);
+      }
+      // should not be needed if graph syncs
+      // this.proposals.push(minion);
     },
-    onExecutedChild(id) {
+    async onExecutedChild(id) {
       this.overlay = true;
       //TODO: make web3 call
-      // const nftContract = new this.web3.eth.Contract(abi, contractAddr);
-      // try {
-      //   const txReceipt = await contract.methods
-      //   execute(
-      //     minion.proposalId,
-      // )
-      //   .send({ from: this.user });
-      // catch {
-      //   console.log("rejected");
-      // }
-      setTimeout(() => {
+      const contract = new this.web3.eth.Contract(abi, this.contractAddr);
+      try {
+        const txReceipt = await contract.methods
+          .executeAction(id)
+          .send({ from: this.user });
+        console.log("txReceipt", txReceipt); // TODO: provide link to etherscan while loading
+        // timeout to let things sync?
+        setTimeout(() => {
+          this.overlay = false;
+          this.proposals.find(
+            minion => minion.proposalId === id
+          ).executed = true;
+        }, 1000);
+      } catch (e) {
         this.overlay = false;
-        this.proposals.find(minion => minion.id === id).executed = true;
-      }, 3000);
+        console.log("rejected", e);
+      }
     }
   },
   created() {
@@ -191,7 +210,7 @@ export default {
       walletconnect: {
         package: WalletConnectProvider, // required
         options: {
-          infuraId: "895440c3ef614d1e835c6b2f114067e8"
+          infuraId: process.env.VUE_APP_INFURA
         }
       }
     };

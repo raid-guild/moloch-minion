@@ -1,0 +1,174 @@
+[
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_proposalId",
+				"type": "uint256"
+			}
+		],
+		"name": "executeAction",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bytes"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_actionTo",
+				"type": "address"
+			},
+			{
+				"name": "_actionValue",
+				"type": "uint256"
+			},
+			{
+				"name": "_actionData",
+				"type": "bytes"
+			},
+			{
+				"name": "_description",
+				"type": "string"
+			}
+		],
+		"name": "proposeAction",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"name": "_moloch",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "fallback"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "proposalId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "proposer",
+				"type": "address"
+			}
+		],
+		"name": "ActionProposed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "proposalId",
+				"type": "uint256"
+			}
+		],
+		"name": "ActionExecuted",
+		"type": "event"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "actions",
+		"outputs": [
+			{
+				"name": "value",
+				"type": "uint256"
+			},
+			{
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"name": "proposer",
+				"type": "address"
+			},
+			{
+				"name": "executed",
+				"type": "bool"
+			},
+			{
+				"name": "data",
+				"type": "bytes"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "MINION_ACTION_DETAILS",
+		"outputs": [
+			{
+				"name": "",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "moloch",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "molochApprovedToken",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
