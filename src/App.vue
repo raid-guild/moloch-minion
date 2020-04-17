@@ -48,6 +48,7 @@
         @submitted="onSubmittedChild"
         @executed="onExecutedChild"
         :minions="minions"
+        :events="events"
       >
       </router-view>
     </v-content>
@@ -92,6 +93,7 @@ export default {
     user: null,
     web3: null,
     proposals: [],
+    events: [],
     overlay: false,
     contractAddr: process.env.VUE_APP_CONTRACT_ADDR
   }),
@@ -117,25 +119,25 @@ export default {
           return item;
         });
       return data;
-    },
-    events: function() {
-      // TODO: resolve into minion for executed property
-      // const contract = new this.web3.eth.Contract(abi, this.contractAddr);
-      // return await contract.getPastEvents(
-      //   "ActionExecuted",
-      //   {
-      //     fromBlock: 0,
-      //     toBlock: "latest",
-      //   },
-      //   (err, ev) => {
-      //     return ev;
-      //   }
-      // );
-      return [];
     }
   },
   components: { Web3Signin },
   methods: {
+    async getEventLog() {
+      const contract = new this.web3.eth.Contract(abi, this.contractAddr);
+      const events = await contract.getPastEvents(
+        "ActionExecuted",
+        {
+          fromBlock: 0,
+          toBlock: "latest"
+        },
+        (err, ev) => {
+          return ev;
+        }
+      );
+      this.events = events;
+      // console.log('events', events)
+    },
     async signIn() {
       try {
         const providerOptions = {
@@ -154,11 +156,12 @@ export default {
         const provider = await web3Modal.connect();
 
         this.web3 = new Web3(provider);
+        this.getEventLog();
         // TODO: check valid chain id
         const [account] = await this.web3.eth.getAccounts();
         this.user = account;
       } catch (err) {
-        console.log("web3Modal error", err);
+        // console.log("web3Modal error", err);
       }
     },
     async onSubmittedChild(minion) {
@@ -168,7 +171,7 @@ export default {
         const txReceipt = await contract.methods
           .proposeAction(minion.target, 0, minion.hexData, minion.description)
           .send({ from: this.user });
-        console.log("txReceipt", txReceipt); // TODO: provide link to etherscan while loading
+        // console.log("txReceipt", txReceipt); // TODO: provide link to etherscan while loading
         // minion.proposalId =
         // timeout to let things sync?
         setTimeout(() => {
@@ -177,7 +180,7 @@ export default {
         }, 1000);
       } catch (e) {
         this.overlay = false;
-        console.log("rejected", e);
+        // console.log("rejected", e);
       }
       // should not be needed if graph syncs
       // this.proposals.push(minion);
@@ -190,7 +193,7 @@ export default {
         const txReceipt = await contract.methods
           .executeAction(id)
           .send({ from: this.user });
-        console.log("txReceipt", txReceipt); // TODO: provide link to etherscan while loading
+        // console.log("txReceipt", txReceipt); // TODO: provide link to etherscan while loading
         // timeout to let things sync?
         setTimeout(() => {
           this.overlay = false;
@@ -200,7 +203,7 @@ export default {
         }, 1000);
       } catch (e) {
         this.overlay = false;
-        console.log("rejected", e);
+        // console.log("rejected", e);
       }
     }
   },
