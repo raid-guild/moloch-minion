@@ -14,7 +14,10 @@
                 <span v-if="minion.executed">executed</span>
               </v-card-text>
               <v-card-actions>
-                <v-btn v-if="!minion.executed" text @click="executeItem"
+                <v-btn
+                  v-if="!minion.executed && minion.didPass"
+                  text
+                  @click="executeItem"
                   >Execute</v-btn
                 >
               </v-card-actions>
@@ -34,7 +37,7 @@ export default {
   },
   methods: {
     executeItem() {
-      this.execute(this.minion.id);
+      this.execute(this.minion.proposalId);
     }
   }
 };
