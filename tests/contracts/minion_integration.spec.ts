@@ -76,8 +76,8 @@ describe("Minion integration", () => {
       await minion.proposeAction(
         action.to,
         action.value,
-        action.data
-        // action.description
+        action.data,
+        action.description
       );
       // console.log("passed as description paramer:", action.description);
       // console.log("action details:", (await moloch.proposals(0)).details);
@@ -100,8 +100,8 @@ describe("Minion integration", () => {
         minion.proposeAction(
           badAction.to,
           badAction.value,
-          badAction.data
-          // badAction.description
+          badAction.data,
+          badAction.description
         )
       ).to.be.revertedWith(Constants.revertStrings.INVALID_PROP_TARGET);
     });
@@ -116,8 +116,8 @@ describe("Minion integration", () => {
       await minion.proposeAction(
         action.to,
         action.value,
-        action.data
-        // action.description
+        action.data,
+        action.description
       );
 
       /* // moloch as action target */
