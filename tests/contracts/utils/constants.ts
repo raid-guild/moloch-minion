@@ -17,7 +17,7 @@ const revertStrings = {
   none: "revert",
   INVALID_PROP_TARGET: "Minion::invalid _actionTo",
   INVALID_EXEC_TARGET: "Minion::invalid target",
-  INVALID_PROP_ID: "Minion::invalid _proposalId",
+  INVALID_EXEC_ID: "Minion::invalid _proposalId",
   IS_EXECUTED: "Minion::action executed",
   NO_ETH: "Minion::insufficient eth",
   NOT_PASSED: "Minion::proposal not passed",
