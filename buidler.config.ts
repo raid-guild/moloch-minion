@@ -9,7 +9,11 @@ const config: BuidlerConfig = {
     tests: "./tests/contracts"
   },
   solc: {
-    version: "0.6.3"
+    version: "0.5.12",
+    optimizer: {
+      enabled: true,
+      runs: 200
+    }
   },
   typechain: {
     outDir: "./build/types",
