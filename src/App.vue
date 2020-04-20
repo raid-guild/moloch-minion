@@ -69,6 +69,17 @@ import WalletConnectProvider from "@walletconnect/web3-provider";
 import gql from "graphql-tag";
 import abi from "./abi/minion.json";
 
+const addresses = {
+  minion: {
+    kovan: "0x98B550E95E90ADFA6D9841fAB937D81FcFEab6D2",
+    mainnet: "0x17405148473E521b62cBCf8eBd929E8A30C4D3aA"
+  },
+  dao: {
+    kovan: "0x501f352e32ec0c981268dc5b5ba1d3661b1acbc6",
+    mainnet: "0xbeb3e32355a933501c247e2dbde6e6ca2489bf3d"
+  }
+};
+
 export default {
   props: {
     source: String
@@ -77,7 +88,11 @@ export default {
     proposals: gql`
       query {
         proposals(
-          where: { molochAddress: "0x501f352e32ec0c981268dc5b5ba1d3661b1acbc6" }
+          where: { molochAddress: "${
+            process.env.VUE_APP_CHAIN === "kovan"
+              ? addresses.dao.kovan
+              : addresses.dao.mainnet
+          }" }
         ) {
           molochAddress
           proposalIndex
@@ -95,7 +110,10 @@ export default {
     proposals: [],
     events: [],
     overlay: false,
-    contractAddr: process.env.VUE_APP_CONTRACT_ADDR
+    contractAddr:
+      process.env.VUE_APP_CHAIN === "kovan"
+        ? addresses.minion.kovan
+        : addresses.minion.mainnet
   }),
   computed: {
     minions: function() {
