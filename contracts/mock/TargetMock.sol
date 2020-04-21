@@ -8,6 +8,10 @@ contract TargetMock {
         bytes data
     );
 
+    function fail() external payable {
+        revert();
+    }
+
     function() external payable {
         // bytes memory data;
         // assembly{
