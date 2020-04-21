@@ -55,6 +55,5 @@ export default {
   passProposal,
   proposeAndPass,
   incProposalCount,
-  encodeDetailsString,
-  mine
+  encodeDetailsString
 };
