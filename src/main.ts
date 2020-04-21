@@ -9,9 +9,15 @@ import ApolloClient from "apollo-boost";
 Vue.use(VueApollo);
 Vue.config.productionTip = false;
 
+const graphURI = {
+  kovan:
+    "https://api.thegraph.com/subgraphs/name/odyssy-automaton/daohaus-kovan",
+  mainnet: "https://api.thegraph.com/subgraphs/name/odyssy-automaton/daohaus"
+};
+
 const apolloClient = new ApolloClient({
   // You should use an absolute URL here
-  uri: "https://api.thegraph.com/subgraphs/name/odyssy-automaton/daohaus-kovan"
+  uri: process.env.VUE_APP_CHAIN === "kovan" ? graphURI.kovan : graphURI.mainnet
 });
 
 const apolloProvider = new VueApollo({
