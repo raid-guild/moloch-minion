@@ -47,11 +47,29 @@
       <router-view
         @submitted="onSubmittedChild"
         @executed="onExecutedChild"
+        @actionDetails="onGetMinionDetails"
         :minions="minions"
         :events="events"
       >
       </router-view>
     </v-content>
+
+    <v-row justify="center">
+      <v-dialog v-model="dialog" persistent max-width="500">
+        <v-card>
+          <v-card-title class="headline">Minion Details</v-card-title>
+          <v-card-text>proposer: {{ details.proposer }}</v-card-text>
+          <v-card-text>target: {{ details.to }}</v-card-text>
+          <v-card-text>data: {{ details.data }}</v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="green darken-1" text @click="dialog = false"
+              >Close</v-btn
+            >
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </v-row>
 
     <v-footer app>
       <span>&copy; 2019</span>
@@ -107,9 +125,11 @@ export default {
     drawer: null,
     user: null,
     web3: null,
+    dialog: false,
     proposals: [],
-    events: [],
     overlay: false,
+    events: [],
+    details: {},
     contractAddr:
       process.env.VUE_APP_CHAIN === "kovan"
         ? addresses.minion.kovan
@@ -154,7 +174,12 @@ export default {
         }
       );
       this.events = events;
-      // console.log('events', events)
+      //console.log('events', events)
+    },
+    async onGetMinionDetails(id) {
+      this.dialog = true;
+      const contract = new this.web3.eth.Contract(abi, this.contractAddr);
+      this.details = await contract.methods.actions(id).call();
     },
     async signIn() {
       try {
