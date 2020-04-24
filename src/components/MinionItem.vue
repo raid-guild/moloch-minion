@@ -20,6 +20,7 @@
                   @click="executeItem"
                   >Execute</v-btn
                 >
+                <v-btn text @click="getDetails">Details</v-btn>
               </v-card-actions>
             </v-card>
           </v-col>
@@ -33,12 +34,17 @@
 export default {
   props: {
     minion: Object,
+    details: Object,
     events: Array,
-    execute: Function
+    execute: Function,
+    actionDetails: Function
   },
   methods: {
     executeItem() {
       this.execute(this.minion.proposalId);
+    },
+    getDetails() {
+      this.actionDetails(this.minion.proposalId);
     },
     isExecuted() {
       return this.events.some(
