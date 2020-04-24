@@ -177,11 +177,8 @@ export default {
       //console.log('events', events)
     },
     async onGetMinionDetails(id) {
-      console.log("get details", id, this.contractAddr);
       this.dialog = true;
       const contract = new this.web3.eth.Contract(abi, this.contractAddr);
-      console.log(contract);
-
       this.details = await contract.methods.actions(id).call();
     },
     async signIn() {
