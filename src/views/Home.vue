@@ -16,7 +16,12 @@
       v-for="(minion, idx) in minions"
       :key="idx"
     >
-      <MinionItem :minion="minion" :events="events" :execute="execute" />
+      <MinionItem
+        :minion="minion"
+        :events="events"
+        :execute="execute"
+        :actionDetails="actionDetails"
+      />
     </v-row>
   </v-container>
 </template>
@@ -34,6 +39,9 @@ export default {
   methods: {
     execute(id) {
       this.$emit("executed", id);
+    },
+    actionDetails(id) {
+      this.$emit("actionDetails", id);
     }
   }
 };
