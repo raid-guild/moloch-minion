@@ -174,7 +174,7 @@ export default {
         }
       );
       this.events = events;
-      //console.log('events', events)
+      console.log("events", events);
     },
     async onGetMinionDetails(id) {
       this.dialog = true;
