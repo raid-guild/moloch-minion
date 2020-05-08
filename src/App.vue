@@ -202,6 +202,11 @@ export default {
       }
     },
     async onSubmittedChild(minion) {
+      // force user to sign in before submitting new proposal
+      if (!this.user) {
+        return this.signIn();
+      }
+
       this.overlay = true;
       const contract = new this.web3.eth.Contract(abi, this.contractAddr);
       try {
@@ -223,6 +228,11 @@ export default {
       // this.proposals.push(minion);
     },
     async onExecutedChild(id) {
+      // force user to sign in before executing proposal
+      if (!this.user) {
+        return this.signIn();
+      }
+
       this.overlay = true;
       //TODO: make web3 call
       const contract = new this.web3.eth.Contract(abi, this.contractAddr);
