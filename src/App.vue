@@ -2,34 +2,28 @@
   <v-app id="inspire">
     <v-navigation-drawer v-model="drawer" app clipped>
       <v-list dense>
-        <v-list-item link>
+        <v-list-item link @click="$router.push('/')">
           <v-list-item-action>
             <v-icon>mdi-view-dashboard</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title @click="$router.push('/')"
-              >Current Proposals</v-list-item-title
-            >
+            <v-list-item-title>Current Proposals</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link>
+        <v-list-item link @click="$router.push('/new')">
           <v-list-item-action>
             <v-icon>mdi-view-dashboard</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title @click="$router.push('/new')"
-              >Submit New Proposals</v-list-item-title
-            >
+            <v-list-item-title>Submit New Proposals</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link>
+        <v-list-item link @click="$router.push('about')">
           <v-list-item-action>
             <v-icon>mdi-settings</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title @click="$router.push('about')"
-              >About</v-list-item-title
-            >
+            <v-list-item-title>About</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -208,6 +202,11 @@ export default {
       }
     },
     async onSubmittedChild(minion) {
+      // force user to sign in before submitting new proposal
+      if (!this.user) {
+        return this.signIn();
+      }
+
       this.overlay = true;
       const contract = new this.web3.eth.Contract(abi, this.contractAddr);
       try {
@@ -229,6 +228,11 @@ export default {
       // this.proposals.push(minion);
     },
     async onExecutedChild(id) {
+      // force user to sign in before executing proposal
+      if (!this.user) {
+        return this.signIn();
+      }
+
       this.overlay = true;
       //TODO: make web3 call
       const contract = new this.web3.eth.Contract(abi, this.contractAddr);
