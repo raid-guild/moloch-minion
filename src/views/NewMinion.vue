@@ -10,7 +10,7 @@
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
-      <v-col cols="5">
+      <v-col xs="8" style="max-width: 500px">
         <v-form ref="form" v-model="valid" lazy-validation>
           <v-text-field
             v-model="target"
