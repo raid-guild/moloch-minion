@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "build": "yarn build:contracts && yarn build:web",
-    "build:contracts": "oz compile && buidler typechain",
+    "build:contracts": "buidler typechain",
     "build:web": "vue-cli-service build",
-    "clean": "rm -rf cache && rm -rf build && rm -f .openzeppelin/.session && rm -f .openzeppelin/dev-*.json",
-    "deploy:local": "yarn clean && yarn build:contracts && oz create Counter --skip-compile -n development --init",
+    "clean": "rm -rf cache && rm -rf build",
+    "deploy:local": "yarn clean && yarn build:contracts",
     "lint": "vue-cli-service lint",
     "start:dev": "yarn deploy:local && vue-cli-service serve",
     "start:node": "buidler node",
@@ -16,7 +16,7 @@
     "test:contracts": "buidler test",
     "test:e2e": "vue-cli-service test:e2e",
     "test:unit": "vue-cli-service test:unit",
-    "upgrade:local": "yarn build:contracts && oz upgrade Counter --skip-compile -n development --init"
+    "upgrade:local": "yarn build:contracts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.8.2",
@@ -41,7 +41,6 @@
     "@nomiclabs/buidler": "^1.2.0",
     "@nomiclabs/buidler-ethers": "^1.2.0",
     "@nomiclabs/buidler-waffle": "^1.2.0",
-    "@openzeppelin/cli": "^2.7.1",
     "@types/chai": "^4.2.9",
     "@types/mocha": "^7.0.1",
     "@types/node": "^13.7.7",
