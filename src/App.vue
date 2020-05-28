@@ -44,8 +44,7 @@
         @actionDetails="onGetMinionDetails"
         :minions="minions"
         :events="events"
-      >
-      </router-view>
+      ></router-view>
     </v-content>
 
     <v-row justify="center">
@@ -213,6 +212,7 @@ export default {
         const txReceipt = await contract.methods
           .proposeAction(minion.target, 0, minion.hexData, minion.description)
           .send({ from: this.user });
+        this.$apollo.queries.proposals.refetch();
         // console.log("txReceipt", txReceipt); // TODO: provide link to etherscan while loading
         // minion.proposalId =
         // timeout to let things sync?
