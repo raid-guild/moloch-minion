@@ -132,21 +132,20 @@ export default {
     minions: function() {
       const data = this.proposals
         .filter(item => {
-          let isMinion = false; // TODO: set false and reasign after testing
+          let isMinion = false;
           try {
             isMinion = JSON.parse(item.details).isMinion;
           } catch (e) {
             ("pass");
           }
           return isMinion;
-        }) // TODO: check if is minion
+        })
         .map(item => {
           try {
             item.description = JSON.parse(item.details).description;
           } catch (e) {
             item.description = "description";
           }
-          // TODO: get is item.executed from minion contract public actions struct or ActionExecuted event
           return item;
         });
       return data;
@@ -167,7 +166,6 @@ export default {
         }
       );
       this.events = events;
-      // console.log("events", events);
     },
     async onGetMinionDetails(id) {
       this.dialog = true;
@@ -212,9 +210,9 @@ export default {
         const txReceipt = await contract.methods
           .proposeAction(minion.target, 0, minion.hexData, minion.description)
           .send({ from: this.user });
+        // TODO: provide link to etherscan while loading
         this.$apollo.queries.proposals.refetch();
-        // console.log("txReceipt", txReceipt); // TODO: provide link to etherscan while loading
-        // minion.proposalId =
+
         // timeout to let things sync?
         setTimeout(() => {
           this.overlay = false;
@@ -224,8 +222,6 @@ export default {
         this.overlay = false;
         // console.log("rejected", e);
       }
-      // should not be needed if graph syncs
-      // this.proposals.push(minion);
     },
     async onExecutedChild(id) {
       // force user to sign in before executing proposal
@@ -234,13 +230,13 @@ export default {
       }
 
       this.overlay = true;
-      //TODO: make web3 call
+      // make web3 call
       const contract = new this.web3.eth.Contract(abi, this.contractAddr);
       try {
         const txReceipt = await contract.methods
           .executeAction(id)
           .send({ from: this.user });
-        // console.log("txReceipt", txReceipt); // TODO: provide link to etherscan while loading
+        // TODO: provide link to etherscan while loading
         // timeout to let things sync?
         setTimeout(() => {
           this.overlay = false;
