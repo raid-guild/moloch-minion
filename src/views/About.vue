@@ -15,8 +15,7 @@
         <p>
           There was no way built into Moloch V2 to run arbitrary functions from
           different contracts through a passing proposal. This now works through
-          a 'Minion' contract, through a funding proposal in V2 with 0 shares
-          and 0 payment:
+          a 'Minion' contract, through a funding proposal in V2 with 0 shares.
         </p>
       </v-col>
     </v-row>
