@@ -10,55 +10,63 @@
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
-      <vue-tabs>
+      <vue-tabs style="width: 400px; min-width: 300px;">
         <v-tab title="ABI Selector">
-          <v-form ref="form" v-model="valid" lazy-validation>
-            <v-text-field
-              v-model="target"
-              label="Target Address"
-              :rules="targetRules"
-              required
-            ></v-text-field>
+          <v-col xs="8">
+            <v-form ref="form" v-model="valid" lazy-validation>
+              <v-text-field
+                v-model="target"
+                label="Target Address"
+                :rules="targetRules"
+                required
+              ></v-text-field>
+              <v-text-field
+                v-model="description"
+                label="Short Description"
+                :rules="descriptionRules"
+                required
+              ></v-text-field>
+              <v-select
+                label="Select ABI"
+                :items="abiItems"
+                @change="chooseABI"
+              ></v-select>
+              <v-textarea
+                v-if="!selectedABI"
+                name="input-7-1"
+                v-model="abiData"
+                filled
+                label="ABI String"
+                :rules="abiStringRules"
+                required
+                value=""
+                @input="getFunctions"
+              ></v-textarea>
+              <v-select
+                label="Functions"
+                :items="abiFunctions"
+                @change="chooseFunction"
+              ></v-select>
+              <template v-for="input in inputs">
+                <p :key="input.name">
+                  {{ input.name }} (type: {{ input.type }})
+                </p>
+                <v-text-field :id="input.name" :key="input.id"></v-text-field>
+              </template>
+              <v-checkbox
+                v-model="checkbox"
+                label="I'm ok with this"
+                required
+              ></v-checkbox>
 
-            <v-text-field
-              v-model="description"
-              label="Short Description"
-              :rules="descriptionRules"
-              required
-            ></v-text-field>
-
-            <v-textarea
-              name="input-7-1"
-              v-model="abiData"
-              filled
-              label="ABI String"
-              :rules="abiStringRules"
-              required
-              value=""
-              @input="getFunctions"
-            ></v-textarea>
-            <v-select
-              label="Functions"
-              :items="abiFunctions"
-              @change="chooseFunction"
-            ></v-select>
-            <template v-for="input in inputs">
-              <p :key="input.name">{{ input.name }} (type: {{ input.type }})</p>
-              <v-text-field :id="input.name" :key="input.id"></v-text-field>
-            </template>
-            <v-checkbox
-              v-model="checkbox"
-              label="I'm ok with this"
-              required
-            ></v-checkbox>
-
-            <v-btn color="success" class="mr-4" @click="submit">
-              Submit
-            </v-btn>
-          </v-form>
+              <v-btn color="success" class="mr-4" @click="submit">
+                Submit
+              </v-btn>
+            </v-form>
+          </v-col>
         </v-tab>
         <v-tab title="Raw Bytes">
-          <v-col xs="8" style="max-width: 500px">
+          <v-col xs="8">
             <v-form ref="form" v-model="valid" lazy-validation>
               <v-text-field
                 v-model="target"
@@ -128,8 +136,34 @@ export default {
       v => !!v || "Hex Data is required",
       v => (v && v.startsWith("0x")) || "Must start with 0x"
     ],
+    selectedABI: null,
     selectedFunction: null,
     inputs: [],
+    abis: {
+      CertNFT: require("../abi/certnft.json"),
+      "Compound cToken": require("../abi/ctoken.json"),
+      ERC20: require("../abi/erc20.json"),
+      ERC721: require("../abi/erc721.json"),
+      Minion: require("../abi/minion.json"),
+      "Moloch v1": require("../abi/moloch_v1.json"),
+      "Moloch v1 Pool": require("../abi/moloch_v1_pool.json"),
+      "Moloch v2": require("../abi/moloch_v2.json"),
+      "Moloch v2 GuildBank": require("../abi/moloch_v2_guildbank.json"),
+      "Uniswap v2 Router": require("../abi/uniswap_v2_router.json")
+    },
+    abiItems: [
+      "Custom ABI",
+      "CertNFT",
+      "Compound cToken",
+      "ERC20",
+      "ERC721",
+      "Minion",
+      "Moloch v1",
+      "Moloch v1 Pool",
+      "Moloch v2",
+      "Moloch v2 GuildBank",
+      "Uniswap v2 Router"
+    ],
     abiFunctions: [],
     abiData: "",
     abiStringRules: [
@@ -145,18 +179,31 @@ export default {
     checkbox: false
   }),
   methods: {
+    chooseABI(contractName) {
+      if (contractName === "Custom ABI") {
+        this.selectedABI = null;
+      } else {
+        this.selectedABI = contractName;
+        this.getFunctions(this.abis[contractName]);
+      }
+    },
     chooseFunction(fName) {
       const test = this.abiFunctions.find(({ name }) => name === fName);
       this.inputs = test.inputs;
     },
-    getFunctions(abiString) {
+    getFunctions(abiParam) {
       this.selectedFunction = null;
+      this.inputs = [];
       let abi;
-      try {
-        abi = JSON.parse(abiString);
-      } catch (e) {
-        // let validation handle errors
-        return [];
+      if (typeof abiParam === "object") {
+        abi = abiParam;
+      } else {
+        try {
+          abi = JSON.parse(abiParam);
+        } catch (e) {
+          // let validation handle errors
+          return [];
+        }
       }
       this.abiFunctions = abi
         .filter(({ type, constant }) => type === "function" && !constant)
