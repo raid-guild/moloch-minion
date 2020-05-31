@@ -10,54 +10,120 @@
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
-      <v-col xs="8" style="max-width: 500px">
-        <v-form ref="form" v-model="valid" lazy-validation>
-          <v-text-field
-            v-model="target"
-            label="Target Address"
-            :rules="targetRules"
-            required
-          ></v-text-field>
+      <vue-tabs style="width: 400px; min-width: 300px;">
+        <v-tab title="ABI Selector">
+          <v-col xs="8">
+            <v-form ref="form" v-model="valid" lazy-validation>
+              <v-text-field
+                v-model="target"
+                label="Target Address"
+                :rules="targetRules"
+                required
+              ></v-text-field>
+              <v-text-field
+                v-model="description"
+                label="Short Description"
+                :rules="descriptionRules"
+                required
+              ></v-text-field>
+              <v-select
+                label="Select ABI"
+                :items="abiItems"
+                @change="chooseABI"
+              ></v-select>
+              <v-textarea
+                v-if="!selectedABI"
+                name="input-7-1"
+                v-model="abiData"
+                filled
+                label="ABI String"
+                :rules="abiStringRules"
+                required
+                value=""
+                @change="getFunctions"
+              ></v-textarea>
+              <v-select
+                label="Functions"
+                v-model="selectedFunction"
+                :items="abiFunctions"
+                @change="chooseFunction"
+              ></v-select>
+              <template v-for="(input, idx) in inputs">
+                <p :key="input.name">
+                  {{ input.name }} (type: {{ input.type }})
+                </p>
+                <v-text-field
+                  :id="idx.toString()"
+                  :key="input.id"
+                  @keyup="setParam"
+                ></v-text-field>
+              </template>
+              <v-checkbox
+                v-model="checkbox"
+                label="I'm ok with this"
+                required
+              ></v-checkbox>
 
-          <v-text-field
-            v-model="description"
-            label="Short Description"
-            :rules="descriptionRules"
-            required
-          ></v-text-field>
+              <v-btn color="success" class="mr-4" @click="submit">
+                Submit
+              </v-btn>
+            </v-form>
+          </v-col>
+        </v-tab>
+        <v-tab title="Raw Bytes">
+          <v-col xs="8">
+            <v-form ref="form" v-model="valid" lazy-validation>
+              <v-text-field
+                v-model="target"
+                label="Target Address"
+                :rules="targetRules"
+                required
+              ></v-text-field>
 
-          <v-textarea
-            name="input-7-1"
-            v-model="hexData"
-            filled
-            label="Data (Hex Encoded)"
-            :rules="hexDataRules"
-            auto-grow
-            required
-            value=""
-          ></v-textarea>
+              <v-text-field
+                v-model="description"
+                label="Short Description"
+                :rules="descriptionRules"
+                required
+              ></v-text-field>
 
-          <v-checkbox
-            v-model="checkbox"
-            label="I'm ok with this"
-            required
-          ></v-checkbox>
+              <v-textarea
+                name="input-7-1"
+                v-model="hexData"
+                filled
+                label="Data (Hex Encoded)"
+                :rules="hexDataRules"
+                auto-grow
+                required
+                value=""
+              ></v-textarea>
 
-          <v-btn color="success" class="mr-4" @click="submit">
-            Submit
-          </v-btn>
-        </v-form>
-      </v-col>
+              <v-checkbox
+                v-model="checkbox"
+                label="I'm ok with this"
+                required
+              ></v-checkbox>
+
+              <v-btn color="success" class="mr-4" @click="submit">
+                Submit
+              </v-btn>
+            </v-form>
+          </v-col>
+        </v-tab>
+      </vue-tabs>
     </v-row>
   </v-container>
 </template>
 <script>
+import { VueTabs, VTab } from "vue-nav-tabs";
+import "vue-nav-tabs/themes/vue-tabs.css";
 export default {
   props: {
     overlay: String,
-    minions: Array
+    minions: Array,
+    web3: Object
   },
-  components: {},
+  components: { VueTabs, VTab },
   data: () => ({
     valid: false,
     target: "",
@@ -76,20 +142,106 @@ export default {
       v => !!v || "Hex Data is required",
       v => (v && v.startsWith("0x")) || "Must start with 0x"
     ],
+    selectedABI: null,
+    selectedFunction: null,
+    inputs: [],
+    inputValues: [],
+    abis: {
+      CertNFT: require("../abi/certnft.json"),
+      "Compound cToken": require("../abi/ctoken.json"),
+      ERC20: require("../abi/erc20.json"),
+      ERC721: require("../abi/erc721.json"),
+      Minion: require("../abi/minion.json"),
+      "Moloch v1": require("../abi/moloch_v1.json"),
+      "Moloch v1 Pool": require("../abi/moloch_v1_pool.json"),
+      "Moloch v2": require("../abi/moloch_v2.json"),
+      "Moloch v2 GuildBank": require("../abi/moloch_v2_guildbank.json"),
+      "Uniswap v2 Router": require("../abi/uniswap_v2_router.json")
+    },
+    abiItems: [
+      "Custom ABI",
+      "CertNFT",
+      "Compound cToken",
+      "ERC20",
+      "ERC721",
+      "Minion",
+      "Moloch v1",
+      "Moloch v1 Pool",
+      "Moloch v2",
+      "Moloch v2 GuildBank",
+      "Uniswap v2 Router"
+    ],
+    abiFunctions: [],
+    abiData: "",
+    abiStringRules: [
+      v => {
+        try {
+          JSON.parse(v);
+        } catch (e) {
+          return "invalid ABI string";
+        }
+        return true;
+      }
+    ],
     checkbox: false
   }),
   methods: {
+    chooseABI(contractName) {
+      if (contractName === "Custom ABI") {
+        this.selectedABI = null;
+      } else {
+        this.selectedABI = contractName;
+        this.getFunctions(this.abis[contractName]);
+      }
+    },
+    chooseFunction(fName) {
+      this.inputs = [];
+      this.inputValues = [];
+      const func = this.abiFunctions.find(({ name }) => name === fName);
+      this.selectedFunction = func;
+      this.inputs = func.inputs;
+      this.inputValues.length = func.inputs.length;
+    },
+    getFunctions(abiParam) {
+      this.hexData = "";
+      this.selectedFunction = null;
+      this.inputs = [];
+      this.inputValues = [];
+      let abi;
+      if (typeof abiParam === "object") {
+        abi = abiParam;
+      } else {
+        try {
+          abi = JSON.parse(abiParam);
+        } catch (e) {
+          // let validation handle errors
+          return [];
+        }
+      }
+      this.abiFunctions = abi
+        .filter(({ type, constant }) => type === "function" && !constant)
+        .map((f, id) => ({ ...f, text: f.name, id }));
+    },
+    setParam({ target: { id, value } }) {
+      this.inputValues[id] = value;
+    },
     submit() {
       if (!this.valid) {
+        alert("Invalid Inputs");
         return false;
       }
       const minion = {};
       minion.name = "new minion";
       minion.target = this.target;
       minion.description = this.description;
-      // TODO: might want to use proposalId for this
       minion.id = this.minions.length + 1;
-      minion.hexData = this.hexData;
+      minion.hexData =
+        this.hexData ||
+        this.web3.eth.abi.encodeFunctionCall(
+          this.selectedFunction,
+          this.inputValues
+        );
+      minion.abi = this.selectedFunction;
       minion.executed = false;
       this.$emit("submitted", minion);
     }
