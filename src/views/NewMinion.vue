@@ -187,7 +187,6 @@ export default {
       minion.name = "new minion";
       minion.target = this.target;
       minion.description = this.description;
-      // TODO: might want to use proposalId for this
       minion.id = this.minions.length + 1;
       minion.hexData =
         this.hexData ||
