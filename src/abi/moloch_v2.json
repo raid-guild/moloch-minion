@@ -7,7 +7,7 @@
 				"type": "address"
 			},
 			{
-				"name": "value",
+				"name": "amount",
 				"type": "uint256"
 			}
 		],
@@ -40,15 +40,15 @@
 		"constant": false,
 		"inputs": [
 			{
-				"name": "from",
+				"name": "sender",
 				"type": "address"
 			},
 			{
-				"name": "to",
+				"name": "recipient",
 				"type": "address"
 			},
 			{
-				"name": "value",
+				"name": "amount",
 				"type": "uint256"
 			}
 		],
@@ -67,7 +67,7 @@
 		"constant": true,
 		"inputs": [
 			{
-				"name": "who",
+				"name": "account",
 				"type": "address"
 			}
 		],
@@ -86,11 +86,11 @@
 		"constant": false,
 		"inputs": [
 			{
-				"name": "to",
+				"name": "recipient",
 				"type": "address"
 			},
 			{
-				"name": "value",
+				"name": "amount",
 				"type": "uint256"
 			}
 		],
