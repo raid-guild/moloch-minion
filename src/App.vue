@@ -44,6 +44,7 @@
         @actionDetails="onGetMinionDetails"
         :minions="minions"
         :events="events"
+        :web3="web3"
       ></router-view>
     </v-content>
 

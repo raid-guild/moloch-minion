@@ -35,23 +35,27 @@
               :rules="abiStringRules"
               required
               value=""
-              @input="getFunctions"
+              @change="getFunctions"
             ></v-textarea>
             <v-select
               label="Functions"
+              v-model="selectedFunction"
               :items="abiFunctions"
               @change="chooseFunction"
             ></v-select>
-            <template v-for="input in inputs">
+            <template v-for="(input, idx) in inputs">
               <p :key="input.name">{{ input.name }} (type: {{ input.type }})</p>
-              <v-text-field :id="input.name" :key="input.id"></v-text-field>
+              <v-text-field
+                :id="idx.toString()"
+                :key="input.id"
+                @keyup="setParam"
+              ></v-text-field>
             </template>
             <v-checkbox
               v-model="checkbox"
               label="I'm ok with this"
               required
             ></v-checkbox>
-
             <v-btn color="success" class="mr-4" @click="submit">
               Submit
             </v-btn>
@@ -107,7 +111,8 @@ import "vue-nav-tabs/themes/vue-tabs.css";
 export default {
   props: {
     overlay: String,
-    minions: Array
+    minions: Array,
+    web3: Object
   },
   components: { VueTabs, VTab },
   data: () => ({
@@ -130,6 +135,7 @@ export default {
     ],
     selectedFunction: null,
     inputs: [],
+    inputValues: [],
     abiFunctions: [],
     abiData: "",
     abiStringRules: [
@@ -146,11 +152,18 @@ export default {
   }),
   methods: {
     chooseFunction(fName) {
-      const test = this.abiFunctions.find(({ name }) => name === fName);
-      this.inputs = test.inputs;
+      this.inputs = [];
+      this.inputValues = [];
+      const func = this.abiFunctions.find(({ name }) => name === fName);
+      this.selectedFunction = func;
+      this.inputs = func.inputs;
+      this.inputValues.length = func.inputs.length;
     },
     getFunctions(abiString) {
+      this.hexData = "";
       this.selectedFunction = null;
+      this.inputs = [];
+      this.inputValues = [];
       let abi;
       try {
         abi = JSON.parse(abiString);
@@ -162,8 +175,12 @@ export default {
         .filter(({ type, constant }) => type === "function" && !constant)
         .map((f, id) => ({ ...f, text: f.name, id }));
     },
+    setParam({ target: { id, value } }) {
+      this.inputValues[id] = value;
+    },
     submit() {
       if (!this.valid) {
+        alert("Invalid Inputs");
         return false;
       }
       const minion = {};
@@ -172,7 +189,13 @@ export default {
       minion.description = this.description;
       // TODO: might want to use proposalId for this
       minion.id = this.minions.length + 1;
-      minion.hexData = this.hexData;
+      minion.hexData =
+        this.hexData ||
+        this.web3.eth.abi.encodeFunctionCall(
+          this.selectedFunction,
+          this.inputValues
+        );
+      minion.abi = this.selectedFunction;
       minion.executed = false;
       this.$emit("submitted", minion);
     }
