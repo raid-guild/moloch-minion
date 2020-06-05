@@ -54,6 +54,19 @@
           <v-card-title class="headline">Minion Details</v-card-title>
           <v-card-text>proposer: {{ details.proposer }}</v-card-text>
           <v-card-text>target: {{ details.to }}</v-card-text>
+          <v-card-text v-if="details.method">
+            method: {{ details.method }}
+          </v-card-text>
+          <v-card-text v-if="details.params && details.params.length">
+            params:
+          </v-card-text>
+          <v-card-text
+            v-for="(item, index) in details.params"
+            v-bind:key="index"
+            style="padding-left: 40px;"
+          >
+            {{item.name}}: {{ item.value }}
+          </v-card-text>
           <v-card-text>data: {{ details.data }}</v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -78,8 +91,9 @@ import Web3Signin from "./components/Web3Signin";
 import Web3 from "web3";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
+import abiDecoder from "abi-decoder";
 import gql from "graphql-tag";
-import abi from "./abi/minion.json";
+import minionAbi from "./abi/minion.json";
 
 const addresses = {
   minion: {
@@ -91,6 +105,21 @@ const addresses = {
     mainnet: "0xbeb3e32355a933501c247e2dbde6e6ca2489bf3d"
   }
 };
+
+const abis = [
+  minionAbi,
+  require("./abi/certnft.json"),
+  require("./abi/ctoken.json"),
+  require("./abi/erc20.json"),
+  require("./abi/erc721.json"),
+  require("./abi/moloch_v1.json"),
+  require("./abi/moloch_v1_pool.json"),
+  require("./abi/moloch_v2.json"),
+  require("./abi/moloch_v2_guildbank.json"),
+  require("./abi/uniswap_v2_router.json")
+]
+
+abis.map(abi => abiDecoder.addABI(abi))
 
 export default {
   props: {
@@ -155,7 +184,7 @@ export default {
   components: { Web3Signin },
   methods: {
     async getEventLog() {
-      const contract = new this.web3.eth.Contract(abi, this.contractAddr);
+      const contract = new this.web3.eth.Contract(minionAbi, this.contractAddr);
       const events = await contract.getPastEvents(
         "ActionExecuted",
         {
@@ -170,8 +199,11 @@ export default {
     },
     async onGetMinionDetails(id) {
       this.dialog = true;
-      const contract = new this.web3.eth.Contract(abi, this.contractAddr);
+      const contract = new this.web3.eth.Contract(minionAbi, this.contractAddr);
       this.details = await contract.methods.actions(id).call();
+      const decode = abiDecoder.decodeMethod(this.details.data);
+      this.details.method = decode && decode.name ? decode.name : null
+      this.details.params = decode && decode.params ? decode.params : []
     },
     async signIn() {
       try {
@@ -206,7 +238,7 @@ export default {
       }
 
       this.overlay = true;
-      const contract = new this.web3.eth.Contract(abi, this.contractAddr);
+      const contract = new this.web3.eth.Contract(minionAbi, this.contractAddr);
       try {
         const txReceipt = await contract.methods
           .proposeAction(minion.target, 0, minion.hexData, minion.description)
@@ -232,7 +264,7 @@ export default {
 
       this.overlay = true;
       // make web3 call
-      const contract = new this.web3.eth.Contract(abi, this.contractAddr);
+      const contract = new this.web3.eth.Contract(minionAbi, this.contractAddr);
       try {
         const txReceipt = await contract.methods
           .executeAction(id)
