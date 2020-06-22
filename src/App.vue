@@ -18,12 +18,20 @@
             <v-list-item-title>Submit New Proposals</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link @click="$router.push('about')">
+        <v-list-item link @click="$router.push('/about')">
           <v-list-item-action>
             <v-icon>mdi-settings</v-icon>
           </v-list-item-action>
           <v-list-item-content>
             <v-list-item-title>About</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item link @click="$router.push('/ens')">
+          <v-list-item-action>
+            <v-icon>mdi-settings</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>ENS</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -40,9 +48,11 @@
     <v-content>
       <router-view
         @submitted="onSubmittedChild"
+        @registered="onRegisteredChild"
         @executed="onExecutedChild"
         @actionDetails="onGetMinionDetails"
         :minions="minions"
+        :domains="domains"
         :events="events"
         :web3="web3"
       ></router-view>
@@ -94,6 +104,8 @@ import WalletConnectProvider from "@walletconnect/web3-provider";
 import abiDecoder from "abi-decoder";
 import gql from "graphql-tag";
 import minionAbi from "./abi/minion.json";
+import molochAbi from './abi/moloch_v2.json';
+import subdomainRegistrarAbi from './abi/minion_subdomain_registrar.json';
 
 const addresses = {
   minion: {
@@ -103,6 +115,14 @@ const addresses = {
   dao: {
     kovan: "0x501f352e32ec0c981268dc5b5ba1d3661b1acbc6",
     mainnet: "0xbeb3e32355a933501c247e2dbde6e6ca2489bf3d"
+  },
+  subdomainRegistrar: {
+    kovan: "0x0f00B15630AAa854A6021437131c12ff2B25fa6f",
+    mainnet: ""
+  },
+  resolver: {
+    kovan: "0xbe3f1473231C9DbC62603F4964406f9D3c4E40f2",
+    mainnet: ""
   }
 };
 
@@ -151,12 +171,25 @@ export default {
     dialog: false,
     proposals: [],
     overlay: false,
+    domains: [],
     events: [],
     details: {},
-    contractAddr:
+    minionAddr:
       process.env.VUE_APP_CHAIN === "kovan"
         ? addresses.minion.kovan
-        : addresses.minion.mainnet
+        : addresses.minion.mainnet,
+    molochAddr:
+      process.env.VUE_APP_CHAIN === "kovan"
+        ? addresses.dao.kovan
+        : addresses.dao.mainnet,
+    subdomainRegistrarAddr:
+      process.env.VUE_APP_CHAIN === "kovan"
+        ? addresses.subdomainRegistrar.kovan
+        : addresses.subdomainRegistrar.mainnet,
+    resolverAddr:
+      process.env.VUE_APP_CHAIN === "kovan"
+        ? addresses.resolver.kovan
+        : addresses.resolver.mainnet
   }),
   computed: {
     minions: function() {
@@ -184,7 +217,7 @@ export default {
   components: { Web3Signin },
   methods: {
     async getEventLog() {
-      const contract = new this.web3.eth.Contract(minionAbi, this.contractAddr);
+      const contract = new this.web3.eth.Contract(minionAbi, this.minionAddr);
       const events = await contract.getPastEvents(
         "ActionExecuted",
         {
@@ -197,9 +230,26 @@ export default {
       );
       this.events = events;
     },
+    async getDomains() {
+      const contract = new this.web3.eth.Contract(subdomainRegistrarAbi, this.subdomainRegistrarAddr);
+      const events = await contract.getPastEvents(
+        "DomainConfigured",
+        {
+          filter: {
+            minion: this.minionAddr
+          },
+          fromBlock: 0,
+          toBlock: "latest"
+        },
+        (err, ev) => {
+          return ev;
+        }
+      );
+      this.domains = events.map(ev => ev.returnValues);
+    },
     async onGetMinionDetails(id) {
       this.dialog = true;
-      const contract = new this.web3.eth.Contract(minionAbi, this.contractAddr);
+      const contract = new this.web3.eth.Contract(minionAbi, this.minionAddr);
       this.details = await contract.methods.actions(id).call();
       const decode = abiDecoder.decodeMethod(this.details.data);
       this.details.method = decode && decode.name ? decode.name : null
@@ -224,6 +274,7 @@ export default {
 
         this.web3 = new Web3(provider);
         this.getEventLog();
+        this.getDomains();
         // TODO: check valid chain id
         const [account] = await this.web3.eth.getAccounts();
         this.user = account;
@@ -238,7 +289,7 @@ export default {
       }
 
       this.overlay = true;
-      const contract = new this.web3.eth.Contract(minionAbi, this.contractAddr);
+      const contract = new this.web3.eth.Contract(minionAbi, this.minionAddr);
       try {
         const txReceipt = await contract.methods
           .proposeAction(minion.target, 0, minion.hexData, minion.description)
@@ -256,6 +307,45 @@ export default {
         // console.log("rejected", e);
       }
     },
+    async onRegisteredChild(request) {
+      const molochContract = new this.web3.eth.Contract(molochAbi, this.molochAddr);
+      const member = await molochContract.methods.members(request.owner).call();
+      // If subdomain owner is not a member, decision is handled by Minion via Moloch vote
+      if (member.shares > 0) {
+        // force user to sign in before submitting new proposal
+        if (!this.user) {
+          return this.signIn();
+        }
+        this.overlay = true;
+
+        const contract = new this.web3.eth.Contract(subdomainRegistrarAbi, this.subdomainRegistrarAddr);
+        try {
+          const txReceipt = await contract.methods
+            .register(this.web3.utils.sha3(request.domain), request.subdomain, request.owner, this.resolverAddr)
+            .send({ from: this.user });
+
+          // timeout to let things sync?
+          setTimeout(() => {
+            this.overlay = false;
+            this.$router.push("/");
+          }, 1000);
+        } catch (e) {
+          this.overlay = false;
+          // console.log("rejected", e);
+        }
+      } else {
+        const minion = {};
+        minion.target = this.subdomainRegistrarAddr;
+        minion.description = `Assign subdomain ${request.subdomain}.${request.domain}.eth to ${request.owner} (requested by ${this.user}).`;
+        minion.id = this.minions.length + 1;
+        const registerFunc = subdomainRegistrarAbi.find(func => func.name && func.name === 'register')
+        minion.hexData = this.web3.eth.abi.encodeFunctionCall(
+          registerFunc,
+          [this.web3.utils.sha3(request.domain), request.subdomain, request.owner, this.resolverAddr]
+        );
+        this.onSubmittedChild(minion);
+      }
+    },
     async onExecutedChild(id) {
       // force user to sign in before executing proposal
       if (!this.user) {
@@ -264,7 +354,7 @@ export default {
 
       this.overlay = true;
       // make web3 call
-      const contract = new this.web3.eth.Contract(minionAbi, this.contractAddr);
+      const contract = new this.web3.eth.Contract(minionAbi, this.minionAddr);
       try {
         const txReceipt = await contract.methods
           .executeAction(id)
