@@ -3,6 +3,7 @@ import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
 import About from "../views/About.vue";
 import NewMinion from "../views/NewMinion.vue";
+import Ens from "../views/Ens.vue";
 
 Vue.use(VueRouter);
 
@@ -21,6 +22,11 @@ const routes = [
     path: "/new",
     name: "New Minion",
     component: NewMinion
+  },
+  {
+    path: "/ens",
+    name: "ENS",
+    component: Ens
   }
 ];
 
