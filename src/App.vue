@@ -53,6 +53,7 @@
         @actionDetails="onGetMinionDetails"
         :minions="minions"
         :domains="domains"
+        :subdomains="subdomains"
         :events="events"
         :web3="web3"
       ></router-view>
@@ -118,11 +119,11 @@ const addresses = {
   },
   subdomainRegistrar: {
     kovan: "0x0f00B15630AAa854A6021437131c12ff2B25fa6f",
-    mainnet: ""
+    mainnet: "0x5Cb634C351A03FF2BfB59C73dB8B429FFdFBbB62"
   },
   resolver: {
     kovan: "0xbe3f1473231C9DbC62603F4964406f9D3c4E40f2",
-    mainnet: ""
+    mainnet: "0xDaaF96c344f63131acadD0Ea35170E7892d3dfBA"
   }
 };
 
@@ -172,6 +173,7 @@ export default {
     proposals: [],
     overlay: false,
     domains: [],
+    subdomains: [],
     events: [],
     details: {},
     minionAddr:
@@ -232,11 +234,45 @@ export default {
     },
     async getDomains() {
       const contract = new this.web3.eth.Contract(subdomainRegistrarAbi, this.subdomainRegistrarAddr);
+      const [ configureEvents, unlistEvents ] = await Promise.all([
+        contract.getPastEvents(
+          "DomainConfigured",
+          {
+            filter: {
+              minion: this.minionAddr
+            },
+            fromBlock: 0,
+            toBlock: "latest"
+          },
+          (err, ev) => {
+            return ev;
+          }
+        ),
+        contract.getPastEvents(
+          "DomainUnlisted",
+          {
+            filter: {},
+            fromBlock: 0,
+            toBlock: "latest"
+          },
+          (err, ev) => {
+            return ev;
+          }
+        )
+      ])
+      const unlisted = unlistEvents.map(ev => ev.returnValues.label);
+      this.domains = configureEvents
+                      .map(ev => ev.returnValues)
+                      .filter(d => !unlisted.includes(d.label));
+      this.getSubDomains()
+    },
+    async getSubDomains() {
+      const contract = new this.web3.eth.Contract(subdomainRegistrarAbi, this.subdomainRegistrarAddr);
       const events = await contract.getPastEvents(
-        "DomainConfigured",
+        "NewRegistration",
         {
           filter: {
-            minion: this.minionAddr
+            label: this.domains.map(d => d.label)
           },
           fromBlock: 0,
           toBlock: "latest"
@@ -245,7 +281,7 @@ export default {
           return ev;
         }
       );
-      this.domains = events.map(ev => ev.returnValues);
+      this.subdomains = events.map(ev => ev.returnValues)
     },
     async onGetMinionDetails(id) {
       this.dialog = true;
