@@ -227,7 +227,11 @@ export default {
         .map((f, id) => ({ ...f, text: f.name, id }));
     },
     setParam({ target: { id, value } }) {
-      this.inputValues[id] = value;
+      try {
+        this.inputValues[id] = JSON.parse(value);
+      } catch (e) {
+        this.inputValues[id] = value;
+      }
     },
     submit() {
       if (!this.valid) {
