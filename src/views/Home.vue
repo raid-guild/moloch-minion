@@ -13,7 +13,7 @@
     <v-row
       align="center"
       justify="center"
-      v-for="(minion, idx) in minions"
+      v-for="(minion, idx) in sortedMinions"
       :key="idx"
     >
       <MinionItem
@@ -34,6 +34,11 @@ export default {
     source: String,
     minions: Array,
     events: Array
+  },
+  computed: {
+    sortedMinions() {
+      return this.minions.slice().reverse();
+    }
   },
   components: { MinionItem },
   methods: {

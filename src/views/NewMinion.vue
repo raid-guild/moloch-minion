@@ -1,5 +1,5 @@
 <template>
-  <v-container class="fill-height" fluid>
+  <v-container fluid>
     <v-row align="center" justify="center">
       <v-col cols="5">
         <v-img
@@ -10,8 +10,19 @@
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
-      <vue-tabs style="width: 400px; min-width: 300px;">
-        <v-tab title="ABI Selector">
+      <v-tabs
+        dark
+        fixed-tabs
+        v-model="tabs"
+        style="width:400px; min-width:300px; flex:none"
+      >
+        <v-tab>ABI Selector</v-tab>
+        <v-tab>Raw Bytes</v-tab>
+      </v-tabs>
+    </v-row>
+    <v-row align="center" justify="center">
+      <v-tabs-items v-model="tabs" style="width:400px; min-width:300px">
+        <v-tab-item>
           <v-col xs="8">
             <v-form ref="form" v-model="valid" lazy-validation>
               <v-text-field
@@ -69,8 +80,8 @@
               </v-btn>
             </v-form>
           </v-col>
-        </v-tab>
-        <v-tab title="Raw Bytes">
+        </v-tab-item>
+        <v-tab-item>
           <v-col xs="8">
             <v-form ref="form" v-model="valid" lazy-validation>
               <v-text-field
@@ -109,23 +120,21 @@
               </v-btn>
             </v-form>
           </v-col>
-        </v-tab>
-      </vue-tabs>
+        </v-tab-item>
+      </v-tabs-items>
     </v-row>
   </v-container>
 </template>
 <script>
-import { VueTabs, VTab } from "vue-nav-tabs";
-import "vue-nav-tabs/themes/vue-tabs.css";
 export default {
   props: {
     overlay: String,
     minions: Array,
     web3: Object
   },
-  components: { VueTabs, VTab },
   data: () => ({
     valid: false,
+    tabs: null,
     target: "",
     targetRules: [
       v => !!v || "Target is required",
@@ -227,7 +236,11 @@ export default {
         .map((f, id) => ({ ...f, text: f.name, id }));
     },
     setParam({ target: { id, value } }) {
-      this.inputValues[id] = value;
+      try {
+        this.inputValues[id] = JSON.parse(value);
+      } catch (e) {
+        this.inputValues[id] = value;
+      }
     },
     submit() {
       if (!this.valid) {
