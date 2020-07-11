@@ -152,23 +152,24 @@ export default {
     source: String
   },
   apollo: {
-    proposals: gql`
-      query {
-        proposals(
-          where: { molochAddress: "${
-            process.env.VUE_APP_CHAIN === "kovan"
-              ? addresses.dao.kovan
-              : addresses.dao.mainnet
-          }" }
-        ) {
-          molochAddress
-          proposalIndex
-          proposalId
-          didPass
-          details
+    proposals: {
+      query: gql`
+        query($addr: String) {
+          proposals(where: { molochAddress: $addr }) {
+            molochAddress
+            proposalIndex
+            proposalId
+            didPass
+            details
+          }
         }
+      `,
+      variables() {
+        return {
+          addr: this.molochAddr
+        };
       }
-    `
+    }
   },
   data: () => ({
     drawer: null,
