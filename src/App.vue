@@ -2,6 +2,7 @@
   <v-app id="inspire">
     <v-navigation-drawer v-model="drawer" app clipped>
       <v-list dense>
+        <v-subheader>Minion Navigation</v-subheader>
         <v-list-item link @click="$router.push(`/${minionAddr}`)">
           <v-list-item-action>
             <v-icon>mdi-view-dashboard</v-icon>
@@ -26,6 +27,8 @@
             <v-list-item-title>About</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-divider class="mx-4" :inset="inset" vertical></v-divider>
+        <v-subheader>Forged Tools</v-subheader>
         <v-list-item link @click="$router.push(`/ens/${minionAddr}`)">
           <v-list-item-action>
             <v-icon>mdi-settings</v-icon>
@@ -336,7 +339,10 @@ export default {
         const moloch = await contract.methods.moloch().call();
         return moloch;
       } catch (err) {
-        alert("invalid minion address, will reload with default");
+        //TODO: use modal instead of alert
+        alert(
+          "invalid minion address, will reload with default. Make sure you are on the correct network."
+        );
         window.location.href = "/";
       }
     },
