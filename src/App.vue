@@ -2,7 +2,8 @@
   <v-app id="inspire">
     <v-navigation-drawer v-model="drawer" app clipped>
       <v-list dense>
-        <v-list-item link @click="$router.push('/')">
+        <v-subheader>Minion Navigation</v-subheader>
+        <v-list-item link @click="$router.push(`/${minionAddr}`)">
           <v-list-item-action>
             <v-icon>mdi-view-dashboard</v-icon>
           </v-list-item-action>
@@ -10,7 +11,7 @@
             <v-list-item-title>Current Proposals</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link @click="$router.push('/new')">
+        <v-list-item link @click="$router.push(`/new/${minionAddr}`)">
           <v-list-item-action>
             <v-icon>mdi-view-dashboard</v-icon>
           </v-list-item-action>
@@ -18,7 +19,7 @@
             <v-list-item-title>Submit New Proposals</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link @click="$router.push('/about')">
+        <v-list-item link @click="$router.push(`/about/${minionAddr}`)">
           <v-list-item-action>
             <v-icon>mdi-settings</v-icon>
           </v-list-item-action>
@@ -26,7 +27,9 @@
             <v-list-item-title>About</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link @click="$router.push('/ens')">
+        <v-divider class="mx-4" :inset="inset" vertical></v-divider>
+        <v-subheader>Forged Tools</v-subheader>
+        <v-list-item link @click="$router.push(`/ens/${minionAddr}`)">
           <v-list-item-action>
             <v-icon>mdi-settings</v-icon>
           </v-list-item-action>
@@ -76,7 +79,7 @@
             v-bind:key="index"
             style="padding-left: 40px;"
           >
-            {{item.name}}: {{ item.value }}
+            {{ item.name }}: {{ item.value }}
           </v-card-text>
           <v-card-text>data: {{ details.data }}</v-card-text>
           <v-card-actions>
@@ -90,7 +93,11 @@
     </v-row>
 
     <v-footer app>
-      <span>&copy; 2019</span>
+      <span>&copy; 2020</span>
+      <v-spacer></v-spacer>
+      <span>Minion {{ minionAddr.substring(0, 6) }}... </span>
+      <v-spacer></v-spacer>
+      <span>Moloch {{ molochAddr.substring(0, 6) }}... </span>
     </v-footer>
     <v-overlay :value="overlay">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
@@ -105,9 +112,10 @@ import WalletConnectProvider from "@walletconnect/web3-provider";
 import abiDecoder from "abi-decoder";
 import gql from "graphql-tag";
 import minionAbi from "./abi/minion.json";
-import molochAbi from './abi/moloch_v2.json';
-import subdomainRegistrarAbi from './abi/minion_subdomain_registrar.json';
+import molochAbi from "./abi/moloch_v2.json";
+import subdomainRegistrarAbi from "./abi/minion_subdomain_registrar.json";
 
+// dao address is gotten from minion contract
 const addresses = {
   minion: {
     kovan: "0x98B550E95E90ADFA6D9841fAB937D81FcFEab6D2",
@@ -138,32 +146,33 @@ const abis = [
   require("./abi/moloch_v2.json"),
   require("./abi/moloch_v2_guildbank.json"),
   require("./abi/uniswap_v2_router.json")
-]
+];
 
-abis.map(abi => abiDecoder.addABI(abi))
+abis.map(abi => abiDecoder.addABI(abi));
 
 export default {
   props: {
     source: String
   },
   apollo: {
-    proposals: gql`
-      query {
-        proposals(
-          where: { molochAddress: "${
-            process.env.VUE_APP_CHAIN === "kovan"
-              ? addresses.dao.kovan
-              : addresses.dao.mainnet
-          }" }
-        ) {
-          molochAddress
-          proposalIndex
-          proposalId
-          didPass
-          details
+    proposals: {
+      query: gql`
+        query($addr: String) {
+          proposals(where: { molochAddress: $addr }) {
+            molochAddress
+            proposalIndex
+            proposalId
+            didPass
+            details
+          }
         }
+      `,
+      variables() {
+        return {
+          addr: this.molochAddr
+        };
       }
-    `
+    }
   },
   data: () => ({
     drawer: null,
@@ -233,8 +242,11 @@ export default {
       this.events = events;
     },
     async getDomains() {
-      const contract = new this.web3.eth.Contract(subdomainRegistrarAbi, this.subdomainRegistrarAddr);
-      const [ configureEvents, unlistEvents ] = await Promise.all([
+      const contract = new this.web3.eth.Contract(
+        subdomainRegistrarAbi,
+        this.subdomainRegistrarAddr
+      );
+      const [configureEvents, unlistEvents] = await Promise.all([
         contract.getPastEvents(
           "DomainConfigured",
           {
@@ -259,15 +271,18 @@ export default {
             return ev;
           }
         )
-      ])
+      ]);
       const unlisted = unlistEvents.map(ev => ev.returnValues.label);
       this.domains = configureEvents
-                      .map(ev => ev.returnValues)
-                      .filter(d => !unlisted.includes(d.label));
-      this.getSubDomains()
+        .map(ev => ev.returnValues)
+        .filter(d => !unlisted.includes(d.label));
+      this.getSubDomains();
     },
     async getSubDomains() {
-      const contract = new this.web3.eth.Contract(subdomainRegistrarAbi, this.subdomainRegistrarAddr);
+      const contract = new this.web3.eth.Contract(
+        subdomainRegistrarAbi,
+        this.subdomainRegistrarAddr
+      );
       const events = await contract.getPastEvents(
         "NewRegistration",
         {
@@ -281,15 +296,15 @@ export default {
           return ev;
         }
       );
-      this.subdomains = events.map(ev => ev.returnValues)
+      this.subdomains = events.map(ev => ev.returnValues);
     },
     async onGetMinionDetails(id) {
       this.dialog = true;
       const contract = new this.web3.eth.Contract(minionAbi, this.minionAddr);
       this.details = await contract.methods.actions(id).call();
       const decode = abiDecoder.decodeMethod(this.details.data);
-      this.details.method = decode && decode.name ? decode.name : null
-      this.details.params = decode && decode.params ? decode.params : []
+      this.details.method = decode && decode.name ? decode.name : null;
+      this.details.params = decode && decode.params ? decode.params : [];
     },
     async signIn() {
       try {
@@ -318,6 +333,19 @@ export default {
         // console.log("web3Modal error", err);
       }
     },
+    async getMoloch(minionAddr) {
+      const contract = new this.web3.eth.Contract(minionAbi, minionAddr);
+      try {
+        const moloch = await contract.methods.moloch().call();
+        return moloch;
+      } catch (err) {
+        //TODO: use modal instead of alert
+        alert(
+          "invalid minion address, will reload with default. Make sure you are on the correct network."
+        );
+        window.location.href = "/";
+      }
+    },
     async onSubmittedChild(minion) {
       // force user to sign in before submitting new proposal
       if (!this.user) {
@@ -344,7 +372,10 @@ export default {
       }
     },
     async onRegisteredChild(request) {
-      const molochContract = new this.web3.eth.Contract(molochAbi, this.molochAddr);
+      const molochContract = new this.web3.eth.Contract(
+        molochAbi,
+        this.molochAddr
+      );
       const member = await molochContract.methods.members(request.owner).call();
       // If subdomain owner is not a member, decision is handled by Minion via Moloch vote
       if (member.shares > 0) {
@@ -354,10 +385,18 @@ export default {
         }
         this.overlay = true;
 
-        const contract = new this.web3.eth.Contract(subdomainRegistrarAbi, this.subdomainRegistrarAddr);
+        const contract = new this.web3.eth.Contract(
+          subdomainRegistrarAbi,
+          this.subdomainRegistrarAddr
+        );
         try {
           const txReceipt = await contract.methods
-            .register(this.web3.utils.sha3(request.domain), request.subdomain, request.owner, this.resolverAddr)
+            .register(
+              this.web3.utils.sha3(request.domain),
+              request.subdomain,
+              request.owner,
+              this.resolverAddr
+            )
             .send({ from: this.user });
 
           // timeout to let things sync?
@@ -374,11 +413,15 @@ export default {
         minion.target = this.subdomainRegistrarAddr;
         minion.description = `Assign subdomain ${request.subdomain}.${request.domain}.eth to ${request.owner} (requested by ${this.user}).`;
         minion.id = this.minions.length + 1;
-        const registerFunc = subdomainRegistrarAbi.find(func => func.name && func.name === 'register')
-        minion.hexData = this.web3.eth.abi.encodeFunctionCall(
-          registerFunc,
-          [this.web3.utils.sha3(request.domain), request.subdomain, request.owner, this.resolverAddr]
+        const registerFunc = subdomainRegistrarAbi.find(
+          func => func.name && func.name === "register"
         );
+        minion.hexData = this.web3.eth.abi.encodeFunctionCall(registerFunc, [
+          this.web3.utils.sha3(request.domain),
+          request.subdomain,
+          request.owner,
+          this.resolverAddr
+        ]);
         this.onSubmittedChild(minion);
       }
     },
@@ -409,7 +452,16 @@ export default {
       }
     }
   },
-  created() {
+  async created() {
+    // get minion address from route if availible
+    if (
+      this.$route.params.minion &&
+      /^(0x){1}[0-9a-fA-F]{40}$/i.test(this.$route.params.minion)
+    ) {
+      this.minionAddr = this.$route.params.minion;
+    } else {
+      this.$router.push(`/${this.minionAddr}`);
+    }
     this.$vuetify.theme.dark = true;
     const providerOptions = {
       walletconnect: {
@@ -424,7 +476,8 @@ export default {
       cacheProvider: true
     });
     if (web3Modal.cachedProvider) {
-      this.signIn();
+      await this.signIn();
+      this.molochAddr = await this.getMoloch(this.minionAddr);
     }
   }
 };
