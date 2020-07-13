@@ -9,7 +9,9 @@
         ></v-img>
       </v-col>
     </v-row>
-
+    <v-row v-if="!sortedMinions.length" align="center" justify="center"
+      >No Minion Proposals yet.</v-row
+    >
     <v-row
       align="center"
       justify="center"

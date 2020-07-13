@@ -9,24 +9,24 @@ Vue.use(VueRouter);
 
 const routes = [
   {
-    path: "/",
-    name: "Home",
-    component: Home
-  },
-  {
-    path: "/about",
+    path: "/about/:minion?",
     name: "About",
     component: About
   },
   {
-    path: "/new",
+    path: "/new/:minion?",
     name: "New Minion",
     component: NewMinion
   },
   {
-    path: "/ens",
+    path: "/ens/:minion?",
     name: "ENS",
     component: Ens
+  },
+  {
+    path: "/:minion?",
+    name: "Home",
+    component: Home
   }
 ];
 
