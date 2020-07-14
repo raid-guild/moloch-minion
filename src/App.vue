@@ -27,7 +27,7 @@
             <v-list-item-title>About</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-divider class="mx-4" :inset="inset" vertical></v-divider>
+        <v-divider class="mx-4" vertical></v-divider>
         <v-subheader>Forged Tools</v-subheader>
         <v-list-item link @click="$router.push(`/ens/${minionAddr}`)">
           <v-list-item-action>
@@ -324,6 +324,7 @@ export default {
         const provider = await web3Modal.connect();
 
         this.web3 = new Web3(provider);
+        this.molochAddr = await this.getMoloch(this.minionAddr);
         this.getEventLog();
         this.getDomains();
         // TODO: check valid chain id
@@ -340,6 +341,8 @@ export default {
         return moloch;
       } catch (err) {
         //TODO: use modal instead of alert
+        console.log(this.web3);
+
         alert(
           "invalid minion address, will reload with default. Make sure you are on the correct network."
         );
@@ -477,6 +480,13 @@ export default {
     });
     if (web3Modal.cachedProvider) {
       await this.signIn();
+    } else {
+      // infura readonly network provider if not signed in
+      this.web3 = new Web3(
+        new Web3.providers.HttpProvider(
+          `https://${process.env.VUE_APP_CHAIN}.infura.io/v3/${process.env.VUE_APP_INFURA}`
+        )
+      );
       this.molochAddr = await this.getMoloch(this.minionAddr);
     }
   }
