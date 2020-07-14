@@ -341,7 +341,6 @@ export default {
         return moloch;
       } catch (err) {
         //TODO: use modal instead of alert
-        console.log(this.web3);
 
         alert(
           "invalid minion address, will reload with default. Make sure you are on the correct network."
