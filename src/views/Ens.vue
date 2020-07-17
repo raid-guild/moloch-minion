@@ -1,4 +1,4 @@
-<template>
+<template v-slot:activator="{ on, attrs }">
   <v-container fluid>
     <v-row align="center" justify="center">
       <v-col cols="5">

@@ -4,6 +4,8 @@ import Home from "../views/Home.vue";
 import About from "../views/About.vue";
 import NewMinion from "../views/NewMinion.vue";
 import Ens from "../views/Ens.vue";
+import Escrow from "../views/Escrow.vue";
+import EscrowDetail from "../views/EscrowDetail.vue";
 
 Vue.use(VueRouter);
 
@@ -22,6 +24,16 @@ const routes = [
     path: "/ens/:minion?",
     name: "ENS",
     component: Ens
+  },
+  {
+    path: "/escrow/:minion?",
+    name: "Escrow",
+    component: Escrow
+  },
+  {
+    path: "/escrow-detail/:id/:minion?",
+    name: "EscrowDetail",
+    component: EscrowDetail
   },
   {
     path: "/:minion?",

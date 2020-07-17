@@ -37,6 +37,14 @@
             <v-list-item-title>ENS</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item link @click="$router.push(`/escrow/${minionAddr}`)">
+          <v-list-item-action>
+            <v-icon>mdi-settings</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Escrow</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -56,6 +64,7 @@
         @actionDetails="onGetMinionDetails"
         :minions="minions"
         :domains="domains"
+        :escrowList="escrowList"
         :subdomains="subdomains"
         :events="events"
         :web3="web3"
@@ -185,6 +194,10 @@ export default {
     subdomains: [],
     events: [],
     details: {},
+    escrowList: [
+      { escrowName: "escrow 1", clientName: "Alice" },
+      { escrowName: "escrow 2", clientName: "Bob" }
+    ],
     minionAddr:
       process.env.VUE_APP_CHAIN === "kovan"
         ? addresses.minion.kovan
