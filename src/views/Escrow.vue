@@ -30,49 +30,49 @@
             <v-col xs="8">
               <v-form ref="form" v-model="valid" lazy-validation>
                 <v-text-field
-                  v-model="clientName"
+                  v-model="escrowObj.clientName"
                   label="Client Name"
                   :rules="clientNameRules"
                   required
                 ></v-text-field>
                 <v-text-field
-                  v-model="escrowName"
+                  v-model="escrowObj.escrowName"
                   label="Sprint Name"
                   :rules="escrowNameRules"
                   required
                 ></v-text-field>
                 <v-text-field
-                  v-model="escrowLink"
+                  v-model="escrowObj.escrowLink"
                   label="Link to deal"
                   :rules="escrowLinkRules"
                   required
                 ></v-text-field>
                 <v-text-field
-                  v-model="provider"
+                  v-model="escrowObj.provider"
                   label="Provider (Multisig) Address"
                   :rules="providerRules"
                   required
                 ></v-text-field>
                 <v-text-field
-                  v-model="token"
+                  v-model="escrowObj.token"
                   label="Payment Token"
                   :rules="tokenRules"
                   required
                 ></v-text-field>
                 <v-text-field
-                  v-model="amount"
+                  v-model="escrowObj.amount"
                   label="Amount to pay at milestone (cap/milestones)"
                   :rules="amountRules"
                   required
                 ></v-text-field>
                 <v-text-field
-                  v-model="cap"
+                  v-model="escrowObj.cap"
                   label="Total deposit"
                   :rules="capRules"
                   required
                 ></v-text-field>
                 <v-text-field
-                  v-model="milestones"
+                  v-model="escrowObj.milestones"
                   label="How Many Milestones"
                   :rules="milestonesRules"
                   required
@@ -87,7 +87,7 @@
                 >
                   <template v-slot:activator="{ on, attrs }">
                     <v-text-field
-                      v-model="termination"
+                      v-model="escrowObj.termination"
                       label="Contract Termination Date"
                       readonly
                       v-bind="attrs"
@@ -95,12 +95,12 @@
                     ></v-text-field>
                   </template>
                   <v-date-picker
-                    v-model="termination"
+                    v-model="escrowObj.termination"
                     @input="menu = false"
                   ></v-date-picker>
                 </v-menu>
                 <v-textarea
-                  v-model="description"
+                  v-model="escrowObj.description"
                   label="More description "
                   required
                 ></v-textarea>
@@ -108,15 +108,8 @@
             </v-col>
             <v-col>
               <h1>Preview Deal</h1>
-              <p>Client: {{ clientName }}</p>
-              <p>Sprint: {{ escrowName }}</p>
-              <p>Description: {{ description }}</p>
-              <p>Link to Deal: {{ escrowLink }}</p>
-              <p>
-                A deposit of {{ cap || "_______" }} in (token:
-                {{ token || "_______" }}) will be held in this escrow
-              </p>
-              <p>bla bla bla</p>
+
+              <EscrowPreview :escrow="escrowObj" />
               <v-btn color="success" class="mr-4" @click="submit">
                 Submit
               </v-btn>
@@ -144,24 +137,30 @@
 </template>
 
 <script>
+import mixins from "../mixins";
+import EscrowPreview from "../components/EscrowPreview";
+
 export default {
   props: {
     escrowList: Array,
     minionAddr: String
   },
+  components: { EscrowPreview },
   computed: {},
   data: () => ({
-    clientName: "",
-    escrowName: "",
-    escrowLink: "",
-    provider: "",
-    token: "",
-    amount: "",
-    cap: "",
-    milestones: "",
-    termination: new Date().toISOString().substr(0, 10),
-    details: "",
-    description: "",
+    escrowObj: {
+      clientName: "",
+      escrowName: "",
+      escrowLink: "",
+      provider: "",
+      token: "",
+      amount: "",
+      cap: "",
+      milestones: "",
+      termination: new Date().toISOString().substr(0, 10),
+      details: "",
+      description: ""
+    },
     clientNameRules: [v => true],
     escrowNameRules: [v => true],
     escrowLinkRules: [v => true],
@@ -188,6 +187,7 @@ export default {
     valid: false,
     menu: false
   }),
+  mixins: [mixins],
   methods: {
     submit() {
       if (!this.valid) {

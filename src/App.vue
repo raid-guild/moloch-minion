@@ -195,8 +195,8 @@ export default {
     events: [],
     details: {},
     escrowList: [
-      { escrowName: "escrow 1", clientName: "Alice" },
-      { escrowName: "escrow 2", clientName: "Bob" }
+      { escrowName: "escrow-1", clientName: "alice" },
+      { escrowName: "escrow-2", clientName: "bob" }
     ],
     minionAddr:
       process.env.VUE_APP_CHAIN === "kovan"
