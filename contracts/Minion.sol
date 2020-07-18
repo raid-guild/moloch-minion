@@ -30,6 +30,44 @@ contract Minion {
     function doWithdraw(address _token, uint256 _amount) public {
         moloch.withdrawBalance(_token, _amount);
     }
+    
+    function doCancel(uint256 _proposalId) public {
+        Action memory action = actions[_proposalId];
+        require(!action.executed, "Minion::action executed");
+        require(action.proposer == msg.sender, "Minion::Must be proposer");
+        moloch.cancelProposal(_proposalId);
+    }
+    
+    function doParentProposal(
+        uint256 _tributeOffered,
+        address _tributeToken,
+        uint256 _paymentRequested,
+        address _paymentToken,
+        string memory _details
+        ) 
+        public
+        returns (uint256)
+        {
+        uint256 shares;
+        (,shares,,,,) = moloch.members(msg.sender);
+        require(shares > 0, "Minion::Not a current dao member");
+        //TODO details could be built using MINION_ACTION_DETAILS
+        //TODO any other requires
+        //TODO should we allow shares or LOOT?
+        //TODO some event
+        
+        uint256 proposalId = moloch.submitProposal(
+            address(this),
+            0,
+            0,
+            _tributeOffered,
+            _tributeToken,
+            _paymentRequested,
+            _paymentToken,
+            _details
+        );
+        return proposalId;
+    }
 
     function proposeAction(
         address _actionTo,
