@@ -15,6 +15,7 @@ contract Minion {
         address to;
         address proposer;
         bool executed;
+        bool cancelled;
         bytes data;
     }
 
@@ -34,8 +35,13 @@ contract Minion {
     function doCancel(uint256 _proposalId) public {
         Action memory action = actions[_proposalId];
         require(!action.executed, "Minion::action executed");
+        require(!action.cancelled, "Minion::action cancelled");
         require(action.proposer == msg.sender, "Minion::Must be proposer");
+        bool[6] memory flags = moloch.getProposalFlags(_proposalId);
+        require(!flags[0], "Minion::proposal already sponsored");
+        require(!flags[3], "Minion::proposal already cancelled");
         moloch.cancelProposal(_proposalId);
+        action.cancelled = true;
     }
 
     function proposeAction(
@@ -69,6 +75,7 @@ contract Minion {
             to: _actionTo,
             proposer: msg.sender,
             executed: false,
+            cancelled: false,
             data: _actionData
         });
 
