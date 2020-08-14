@@ -4,8 +4,10 @@ import "./moloch/Moloch.sol";
 
 contract Minion {
 
+    // --- Constants ---
     string public constant MINION_ACTION_DETAILS = '{"isMinion": true, "title":"MINION", "description":"';
 
+    // --- State and data structures ---
     Moloch public moloch;
     address public molochApprovedToken;
     mapping (uint256 => Action) public actions; // proposalId => Action
@@ -18,13 +20,18 @@ contract Minion {
         bytes data;
     }
 
+    // --- Events ---
     event ActionProposed(uint256 proposalId, address proposer);
     event ActionExecuted(uint256 proposalId, address executor);
 
+    // --- Constructor ---
     constructor(address _moloch) public {
         moloch = Moloch(_moloch);
         molochApprovedToken = moloch.depositToken();
     }
+
+    // --- Fallback function ---
+    function() external payable {}
 
     // withdraw funds from the moloch
     function doWithdraw(address _token, uint256 _amount) public {
@@ -34,10 +41,10 @@ contract Minion {
     function proposeAction(
         address _actionTo,
         uint256 _actionValue,
-        bytes memory _actionData,
-        string memory _description
+        bytes calldata _actionData,
+        string calldata _description
     )
-        public
+        external
         returns (uint256)
     {
         // No calls to zero address allows us to check that Minion submitted
@@ -71,7 +78,7 @@ contract Minion {
         return proposalId;
     }
 
-    function executeAction(uint256 _proposalId) public returns (bytes memory) {
+    function executeAction(uint256 _proposalId) external returns (bytes memory) {
         Action memory action = actions[_proposalId];
         bool[6] memory flags = moloch.getProposalFlags(_proposalId);
 
