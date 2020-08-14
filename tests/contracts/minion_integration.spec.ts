@@ -185,6 +185,23 @@ describe("Minion integration", () => {
         ).to.be.revertedWith(Constants.revertStrings.INVALID_PROP_TARGET);
       });
 
+      it("reverts proposal to moloch", async () => {
+        const badAction = {
+          to: moloch.address,
+          value: ethers.utils.parseEther("1"),
+          data: ethers.utils.hexlify(ethers.utils.randomBytes(50)),
+          description: "foo"
+        };
+        await expect(
+          minion.proposeAction(
+            badAction.to,
+            badAction.value,
+            badAction.data,
+            badAction.description
+          )
+        ).to.be.revertedWith(Constants.revertStrings.INVALID_PROP_TARGET);
+      });
+
       it("reverts if moloch proposal fails", async () => {
         const action = {
           to: target.address,
@@ -322,21 +339,13 @@ describe("Minion integration", () => {
           proposalId: 1,
           queueIndex: 0
         };
-        actionToMoloch = {
-          to: moloch.address,
-          value: ethers.utils.parseEther("0"),
-          data: "0x",
-          description: "foo",
-          proposalId: 2,
-          queueIndex: 1
-        };
         executedAction = {
           to: target.address,
           value: ethers.utils.parseEther("0"),
           data: "0x",
           description: "foo",
-          proposalId: 3,
-          queueIndex: 2
+          proposalId: 2,
+          queueIndex: 1
         };
         failingCallAction = {
           to: target.address,
@@ -344,8 +353,8 @@ describe("Minion integration", () => {
           data: new ethers.utils.Interface(TargetMockArtifact.abi).functions
             .fail.sighash,
           description: "foo",
-          proposalId: 4,
-          queueIndex: 3
+          proposalId: 3,
+          queueIndex: 2
         };
 
         // these executions need to stay in order to line up with the
@@ -357,7 +366,6 @@ describe("Minion integration", () => {
           unpassedAction.description
         );
         await Utils.proposeAndPass(minion, moloch, valueAction);
-        await Utils.proposeAndPass(minion, moloch, actionToMoloch);
         await Utils.proposeAndPass(minion, moloch, executedAction);
         await Utils.proposeAndPass(minion, moloch, failingCallAction);
 
@@ -375,12 +383,6 @@ describe("Minion integration", () => {
         await expect(
           minion.executeAction(unpassedAction.proposalId)
         ).to.be.revertedWith(Constants.revertStrings.NOT_PASSED);
-      });
-
-      it("reverts action to moloch", async () => {
-        await expect(
-          minion.executeAction(actionToMoloch.proposalId)
-        ).to.be.revertedWith(Constants.revertStrings.INVALID_EXEC_TARGET);
       });
 
       it("reverts a previously executed action", async () => {

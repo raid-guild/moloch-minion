@@ -47,9 +47,13 @@ contract Minion {
         external
         returns (uint256)
     {
-        // No calls to zero address allows us to check that Minion submitted
+        // can't call arbitrary functions on parent moloch, and no calls to
+        // zero address allows us to check that Minion submitted
         // the proposal without getting the proposal struct from the moloch
-        require(_actionTo != address(0), "Minion::invalid _actionTo");
+        require(
+            !(_actionTo == address(0) || _actionTo == address(moloch)),
+            "Minion::invalid _actionTo"
+        );
 
         string memory details = string(abi.encodePacked(MINION_ACTION_DETAILS, _description, '"}'));
 
@@ -85,7 +89,6 @@ contract Minion {
         // minion did not submit this proposal
         require(action.to != address(0), "Minion::invalid _proposalId");
         // can't call arbitrary functions on parent moloch
-        require(action.to != address(moloch), "Minion::invalid target");
         require(!action.executed, "Minion::action executed");
         require(address(this).balance >= action.value, "Minion::insufficient eth");
         require(flags[2], "Minion::proposal not passed");
