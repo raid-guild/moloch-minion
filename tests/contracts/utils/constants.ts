@@ -21,7 +21,11 @@ const revertStrings = {
   NO_ETH: "Minion::insufficient eth",
   NOT_PASSED: "Minion::proposal not passed",
   CALL_FAIL: "Minion::call failure",
-  NOT_MEMBER: "Minion::not member"
+  NOT_MEMBER: "Minion::not member",
+  NOT_PROPOSER: "Minion::not proposer",
+  moloch: {
+    SPONSORED: "proposal has already been sponsored"
+  }
 };
 
 const systemConstants = {

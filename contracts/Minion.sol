@@ -22,6 +22,7 @@ contract Minion {
 
     // --- Events ---
     event ActionProposed(uint256 proposalId, address proposer);
+    event ActionCanceled(uint256 proposalId);
     event ActionExecuted(uint256 proposalId, address executor);
 
     // --- Modifiers ---
@@ -87,6 +88,14 @@ contract Minion {
 
         emit ActionProposed(proposalId, msg.sender);
         return proposalId;
+    }
+
+    function cancelAction(uint256 _proposalId) external {
+        Action memory action = actions[_proposalId];
+        require(msg.sender == action.proposer, "Minion::not proposer");
+        delete actions[_proposalId];
+        emit ActionCanceled(_proposalId);
+        moloch.cancelProposal(_proposalId);
     }
 
     function executeAction(uint256 _proposalId) external returns (bytes memory) {

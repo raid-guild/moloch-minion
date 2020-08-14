@@ -250,6 +250,77 @@ describe("Minion integration", () => {
     });
   });
 
+  describe("cancelAction", () => {
+    beforeEach(async () => {
+      const action = {
+        to: target.address,
+        value: ethers.utils.parseEther("1"),
+        data: ethers.utils.hexlify(ethers.utils.randomBytes(50)),
+        description: "foo",
+        proposalId: 0,
+        queueIndex: 0
+      };
+
+      await minion.proposeAction(
+        action.to,
+        action.value,
+        action.data,
+        action.description
+      );
+    });
+
+    describe("successCases", () => {
+      // check that balance is updated? -- no tribute actually
+      const propId = 0;
+      it("cancels the proposal", async () => {
+        await minion.cancelAction(propId);
+
+        // cancels proposal in the moloch
+        const flags = await moloch.getProposalFlags(propId);
+        expect(flags[3]).to.be.true;
+
+        // deletes action from the minion
+        const action = await minion.actions(propId);
+        expect(action.to).to.eq(Constants.AddressZero);
+        expect(action.value).to.eq(0);
+        expect(action.proposer).to.eq(Constants.AddressZero);
+        expect(action.executed).to.be.false;
+        expect(action.data).to.eq("0x");
+      });
+
+      it("emits expected events", async () => {
+        await expect(minion.cancelAction(propId))
+          .to.emit(minion, "ActionCanceled")
+          .withArgs(propId)
+          .to.emit(moloch, "CancelProposal")
+          .withArgs(propId, minion.address);
+      });
+    });
+
+    describe("failureCases", () => {
+      it("fails if caller not proposer", async () => {
+        await expect(minion.connect(eoa).cancelAction(0)).to.be.revertedWith(
+          Constants.revertStrings.NOT_PROPOSER
+        );
+      });
+
+      it("fails if proposal not from minion", async () => {
+        // TODO: submit proposal from moloch
+        await Utils.incProposalCount(moloch, 1);
+        await expect(minion.cancelAction(1)).to.be.revertedWith(
+          Constants.revertStrings.NOT_PROPOSER
+        );
+      });
+
+      it("fails if prop already sponsored", async () => {
+        await moloch.sponsorProposal(0);
+        await expect(minion.cancelAction(0)).to.be.revertedWith(
+          Constants.revertStrings.moloch.SPONSORED
+        );
+      });
+    });
+  });
+
   describe("executeAction", () => {
     describe("success cases", () => {
       let action1: Action, action2: Action, emptyAddressAction: Action;
