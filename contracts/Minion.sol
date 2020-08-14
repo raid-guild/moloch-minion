@@ -24,6 +24,12 @@ contract Minion {
     event ActionProposed(uint256 proposalId, address proposer);
     event ActionExecuted(uint256 proposalId, address executor);
 
+    // --- Modifiers ---
+    modifier memberOnly() {
+        require(isMember(msg.sender), "Minion::not member");
+        _;
+    }
+
     // --- Constructor ---
     constructor(address _moloch) public {
         moloch = Moloch(_moloch);
@@ -45,6 +51,7 @@ contract Minion {
         string calldata _description
     )
         external
+        memberOnly
         returns (uint256)
     {
         // can't call arbitrary functions on parent moloch, and no calls to
@@ -88,7 +95,6 @@ contract Minion {
 
         // minion did not submit this proposal
         require(action.to != address(0), "Minion::invalid _proposalId");
-        // can't call arbitrary functions on parent moloch
         require(!action.executed, "Minion::action executed");
         require(address(this).balance >= action.value, "Minion::insufficient eth");
         require(flags[2], "Minion::proposal not passed");
@@ -101,5 +107,9 @@ contract Minion {
         return retData;
     }
 
-    function() external payable { }
+    // --- View functions ---
+    function isMember(address usr) public view returns (bool) {
+        (, uint shares,,,,) = moloch.members(usr);
+        return shares > 0;
+    }
 }

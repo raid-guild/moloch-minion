@@ -168,6 +168,28 @@ describe("Minion integration", () => {
     });
 
     describe("failure cases", () => {
+      it("reverts on proposal by non-member", async () => {
+        const action = {
+          to: target.address,
+          value: ethers.utils.parseEther("1"),
+          data: ethers.utils.hexlify(ethers.utils.randomBytes(50)),
+          description: "foo",
+          proposalId: 0,
+          queueIndex: 0
+        };
+
+        await expect(
+          minion
+            .connect(eoa)
+            .proposeAction(
+              action.to,
+              action.value,
+              action.data,
+              action.description
+            )
+        ).to.be.revertedWith(Constants.revertStrings.NOT_MEMBER);
+      });
+
       it("reverts proposal to zero address", async () => {
         const badAction = {
           to: Constants.AddressZero,
