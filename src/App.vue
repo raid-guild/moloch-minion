@@ -37,6 +37,14 @@
             <v-list-item-title>ENS</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item link @click="$router.push(`/nft/${minionAddr}`)">
+          <v-list-item-action>
+            <v-icon>mdi-settings</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>NFT</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -54,6 +62,7 @@
         @registered="onRegisteredChild"
         @executed="onExecutedChild"
         @actionDetails="onGetMinionDetails"
+        @mintedNFT="onMintedNFT"
         :minions="minions"
         :domains="domains"
         :subdomains="subdomains"
@@ -114,6 +123,7 @@ import gql from "graphql-tag";
 import minionAbi from "./abi/minion.json";
 import molochAbi from "./abi/moloch_v2.json";
 import subdomainRegistrarAbi from "./abi/minion_subdomain_registrar.json";
+import nftAbi from "./abi/minion_nft.json";
 
 // dao address is gotten from minion contract
 const addresses = {
@@ -132,6 +142,10 @@ const addresses = {
   resolver: {
     kovan: "0xbe3f1473231C9DbC62603F4964406f9D3c4E40f2",
     mainnet: "0xDaaF96c344f63131acadD0Ea35170E7892d3dfBA"
+  },
+  nft: {
+    kovan: "0x29B237Bb6D56d2710F68638C7400727f0E29fb27",
+    mainnet: "0x0"
   }
 };
 
@@ -200,7 +214,11 @@ export default {
     resolverAddr:
       process.env.VUE_APP_CHAIN === "kovan"
         ? addresses.resolver.kovan
-        : addresses.resolver.mainnet
+        : addresses.resolver.mainnet,
+    nftAddr:
+      process.env.VUE_APP_CHAIN === "kovan"
+        ? addresses.nft.kovan
+        : addresses.nft.mainnet
   }),
   computed: {
     minions: function() {
@@ -451,6 +469,47 @@ export default {
       } catch (e) {
         this.overlay = false;
         // console.log("rejected", e);
+      }
+    },
+    async onMintedNFT(request) {
+      const molochContract = new this.web3.eth.Contract(
+        molochAbi,
+        this.molochAddr
+      );
+      const member = await molochContract.methods.members(request.to).call();
+      // If token receiver is not a member, decision is handled by Minion via Moloch vote
+      if (member.shares > 0) {
+        // force user to sign in before submitting new proposal
+        if (!this.user) {
+          return this.signIn();
+        }
+        this.overlay = true;
+
+        const contract = new this.web3.eth.Contract(nftAbi, this.nftAddr);
+        try {
+          const txReceipt = await contract.methods
+            .mint(request.to)
+            .send({ from: this.user });
+
+          // timeout to let things sync?
+          setTimeout(() => {
+            this.overlay = false;
+            this.$router.push("/");
+          }, 1000);
+        } catch (e) {
+          this.overlay = false;
+          // console.log("rejected", e);
+        }
+      } else {
+        const minion = {};
+        minion.target = this.nftAddr;
+        minion.description = `Mint welcome token to ${request.to} (requested by ${this.user}).`;
+        minion.id = this.minions.length + 1;
+        const mintFunc = nftAbi.find(func => func.name && func.name === "mint");
+        minion.hexData = this.web3.eth.abi.encodeFunctionCall(mintFunc, [
+          request.to
+        ]);
+        this.onSubmittedChild(minion);
       }
     }
   },
